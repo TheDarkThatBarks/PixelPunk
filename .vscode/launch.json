@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "Start External Program",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/main.exe",
+            "console": "externalTerminal",
+            //"cwd": "optional working directory",
+            //"args" : [ "optional arguments", "each argument is enclosed in quotes", "separated by commas" ],
+            "preLaunchTask": "C/C++: g++.exe build active file",
+        }
+    ]
+}
