@@ -107,7 +107,7 @@ void initMap(std::string map) {
 			rows++;
 	}
 	cols = map.find('\n') / 2;
-    std::cout << rows << " " << cols << std::endl;
+    //std::cout << rows << " " << cols << std::endl;
     mapCoord = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
     std::istringstream f(map);
 	std::string line;
@@ -134,29 +134,49 @@ void initMap(std::string map) {
 }
 
 void printScreen() {
-    setCursor(0, 0);
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c < cols; c++) {
-            char ch = ' ';
-            switch (mapCoord[r][c]) {
-                case 1:
-                    ch = '+';
-                    setColor("PURPLE", "PURPLE");
-                    break;
-                case -1:
-                    ch = '*';
-                    setColor("WHITE", "WHITE");
-                    break;
-                case -5:
-                    ch = '-';
-                    setColor("LIGHT_RED", "LIGHT_RED");
-                    break;
-                default:
-                    setColor("BLACK", "LIGHT_GRAY");
-            }
-            std::cout << ch << ch;
+    int rOffset = 3;
+    int cOffset = 5;
+    for (int r = -1; r < rows; r++) {
+        setCursor(cOffset, rOffset + r);
+        setColor("BLACK", "LIGHT_GRAY");
+        if (r == -1) {
+            std::cout << " ";
+        } else {
+            std::cout << "|";
         }
-        std::cout << std::endl;
+        for (int c = 0; c < cols; c++) {
+            if (r == -1) {
+                std::cout << "__";
+            } else {
+                char ch = ' ';
+                switch (mapCoord[r][c]) {
+                    case 1:
+                        ch = '+';
+                        setColor("PURPLE", "PURPLE");
+                        break;
+                    case -1:
+                        ch = '*';
+                        setColor("WHITE", "WHITE");
+                        break;
+                    case -5:
+                        ch = '-';
+                        setColor("LIGHT_RED", "LIGHT_RED");
+                        break;
+                    default:
+                        if (r == rows - 1)
+                            ch = '_';
+                        setColor("BLACK", "LIGHT_GRAY");
+                }
+                std::cout << ch << ch;
+            }
+        }
+        setColor("BLACK", "LIGHT_GRAY");
+        if (r == -1) {
+            std::cout << " ";
+        } else {
+            std::cout << "|";
+        }
+        //std::cout << std::endl;
     }
     //setCursor(0, 0);
     setColor("BLACK", "LIGHT_GRAY");
