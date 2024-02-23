@@ -44,8 +44,8 @@ const int cOffset = 6;
 const int menuROffset = 2;
 const int menuCOffset = 3;
 int kbMode;
-const int menuSize = 2;
-const std::string menu[menuSize] = {"TEST1", "TEST2"};
+const int menuSize = 3;
+const std::string menu[menuSize] = {"TEST1", "TEST2", "TEST3"};
 
 Pos screenPos;
 const int screenSize = 15;

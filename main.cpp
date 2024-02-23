@@ -139,32 +139,18 @@ void printScreen() {
         std::cout << "|";
     }
 
-    setCursor(cOffset + menuCOffset, rOffset + screenSize + menuROffset);
-    int screenWidth = cOffset * 2 + screenSize * 2;
-    int menuLength = 0;
-    for (std::string str : menu)
-        menuLength += str.length();
-    int gap = (screenWidth - menuLength - (2 * 3)) / (menuSize + 1);
-    int gapR = (screenWidth - menuLength - (2 * 3)) % (menuSize + 1);
-    reset();
-    std::cout << screenWidth << " " << menuLength << " " << gap << " " << gapR;
-    if (gapR > 0 && gapR % 2 == 0) {
-        int numGapsToIncreaseOnEachSide = gapR / 2;
-        int counter = 0;
-        setCursor(3, rOffset + screenSize + menuROffset);
-        for (int i = 0; i < menuSize; i++) {
-            std::string gapStr = "";
-            for (int j = 0; j < gap; j++)
-                gapStr += " ";
-            if (i < numGapsToIncreaseOnEachSide || menuSize - i < numGapsToIncreaseOnEachSide)
-                gapStr += " ";
-            std::cout << gapStr << menu[i];
-        }
-        for (int j = 0; j < gap + 1; j++)
-            std::cout << " ";
-    } else if {
-        int numGapsToIncreaseFromMiddle = ((gapR - 1) / 2) + 1;
-
+    const int w = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
+    int gaps[menuSize];
+    gaps[1] = std::round((w - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
+    gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
+    setCursor(menuCOffset, rOffset + screenSize + menuROffset);
+    for (int i = 0; i < menuSize; i++) {
+        if (i > 1)
+            gaps[i] = std::round(gaps[i - 1] + ((float)(menu[i - 2].length() - menu[i].length()) / 2));
+        std::string str = "";
+        for (int j = 0; j < gaps[i]; j++)
+            str += " ";
+        std::cout << str << menu[i];
     }
 }
 
