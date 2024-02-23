@@ -29,14 +29,18 @@ HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 HWND console = GetConsoleWindow();
 RECT r;
 
+struct Pos {
+    int r, c;
+};
+
 std::vector<std::vector<int>> mapCoord;
 int rows, cols;
 const int rOffset = 3;
 const int cOffset = 6;
 
-struct Pos {
-    int r, c;
-};
+Pos screenPos;
+int screenSize = 15;
+int screenThreshold = 3;
 
 Pos* playerPos = (Pos*)malloc(sizeof(Pos));
 std::vector<Pos*> enemyPos;
@@ -57,6 +61,7 @@ void setColor(int val);
 void reset();
 
 void initMap(std::string map);
+void printScreen();
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC);
 void changePos(int val, Pos* pos, int newR, int newC);
 void keyPress();

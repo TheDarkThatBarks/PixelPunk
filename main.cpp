@@ -4,8 +4,8 @@ int main() {
     GetWindowRect(console, &r);
     MoveWindow(console, r.left, r.top, 355, 375, TRUE);
     removeScrollbar();
-    //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map.txt");
-    std::ifstream m("map.txt");
+    //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
+    std::ifstream m("map2.txt");
 	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
     keyPress();
@@ -64,6 +64,18 @@ void reset() {
     setColor(0);
 }
 
+Pos screenToMap(Pos pos) {
+    pos.r += screenPos.r;
+    pos.c += screenPos.c;
+    return pos;
+}
+
+Pos mapToScreen(Pos pos) {
+    pos.r -= screenPos.r;
+    pos.c -= screenPos.c;
+    return pos;
+}
+
 void initMap(std::string map) {
     rows = 1, cols = 0;
 	for (int i = 0; i < map.length(); i++) {
@@ -73,6 +85,9 @@ void initMap(std::string map) {
                 cols = i / 2;
         }
 	}
+    if (rows <= screenSize && cols <= screenSize)
+        screenPos = {0, 0};
+    screenPos = {8, 8};
     mapCoord = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
     std::istringstream f(map);
 	std::string line;
@@ -102,28 +117,35 @@ void initMap(std::string map) {
         }
         r++;
     }
+    printScreen();
+    reset();
+}
+
+void printScreen() {
     setCursor(cOffset, rOffset - 1);
-    for (int c = 0; c < cols; c++)
+    for (int c = 0; c < screenSize; c++)
         std::cout << "__";
-    for (int r = 0; r < rows; r++) {
+    for (int r = 0; r < screenSize; r++) {
         setCursor(cOffset - 1, rOffset + r);
         setColor(0);
         std::cout << "|";
-        for (int c = 0; c < cols; c++) {
-            setColor(mapCoord[r][c]);
-            std::cout << (r == rows - 1 ? "__" : "  ");
+        for (int c = 0; c < screenSize; c++) {
+            Pos pos = screenToMap({r, c});
+            setColor(mapCoord[pos.r][pos.c]);
+            std::cout << (r == screenSize - 1 ? "__" : "  ");
         }
         setColor(0);
         std::cout << "|";
     }
-    reset();
 }
 
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
-    setCursor(cOffset + (oldC * 2), rOffset + oldR);
+    Pos oldPos = mapToScreen({oldR, oldC});
+    setCursor(cOffset + (oldPos.c * 2), rOffset + oldPos.r);
     setColor(0);
-    std::cout << (oldR == rows - 1 ? "__" : "  ");
-    setCursor(cOffset + (newC * 2), rOffset + newR);
+    std::cout << (oldPos.r == screenSize - 1 ? "__" : "  ");
+    Pos newPos = mapToScreen({newR, newC});
+    setCursor(cOffset + (newPos.c * 2), rOffset + newPos.r);
     setColor(val);
     std::cout << "  ";
     reset();
@@ -133,7 +155,21 @@ void changePos(int val, Pos* pos, int newR, int newC) {
     if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] != PLAYER && mapCoord[newR][newC] >= 0) {
         mapCoord[pos->r][pos->c] = 0;
         mapCoord[newR][newC] = val;
-        updateDisplay(val, pos->r, pos->c, newR, newC);
+        if (val == PLAYER && newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + 1 + screenSize <= rows) {
+            screenPos.r++;
+            printScreen();
+        } else if (val == PLAYER && newR < screenPos.r + screenThreshold && screenPos.r - 1 >= 0) {
+            screenPos.r--;
+            printScreen();
+        } else if (val == PLAYER && newC >= screenPos.c + screenSize - screenThreshold && screenPos.c + 1 + screenSize <= cols) {
+            screenPos.c++;
+            printScreen();
+        } else if (val == PLAYER && newC < screenPos.c + screenThreshold && screenPos.c - 1 >= 0) {
+            screenPos.c--;
+            printScreen();
+        } else if (newR >= screenPos.r && newR < screenPos.r + screenSize && newC >= screenPos.c && newC < screenPos.c + screenSize) {
+            updateDisplay(val, pos->r, pos->c, newR, newC);
+        }
         pos->r = newR;
         pos->c = newC;
     }
