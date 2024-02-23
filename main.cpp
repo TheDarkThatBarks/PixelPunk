@@ -1,34 +1,29 @@
-#include <iostream>
-#include <string>
-#include <time.h>
-#include <fstream>
-#include <streambuf>
-#include <sstream>
-#include <windows.h>
-#include <stdio.h>
-#include <conio.h>
-#include <vector>
-#include <cmath>
+#include "main.h"
 
-#define KB_UP 72
-#define KB_DOWN 80
-#define KB_LEFT 75
-#define KB_RIGHT 77
-#define KB_ESCAPE 27
-#define KB_SPACE 32
-
-HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-HWND console = GetConsoleWindow();
-RECT r;
+int main() {
+    GetWindowRect(console, &r);
+    MoveWindow(console, r.left, r.top, 355, 375, TRUE);
+    removeScrollbar();
+    //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map.txt");
+    std::ifstream m("map.txt");
+	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+    initMap(map);
+    keyPress();
+}
 
 void removeScrollbar() {
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	GetConsoleScreenBufferInfo(hConsole, &info);
-	COORD new_size = {
+	COORD newSize = {
 		(short)(info.srWindow.Right - info.srWindow.Left + 1),
 		(short)(info.srWindow.Bottom - info.srWindow.Top + 1)
 	};
-	SetConsoleScreenBufferSize(hConsole, new_size);
+	SetConsoleScreenBufferSize(hConsole, newSize);
+
+    CONSOLE_CURSOR_INFO* info2 = (CONSOLE_CURSOR_INFO*)malloc(sizeof(CONSOLE_CURSOR_INFO));
+    GetConsoleCursorInfo(hConsole, info2);
+    info2->bVisible = false;
+    SetConsoleCursorInfo(hConsole, info2);
 }
 
 void setCursor(short x, short y) {
@@ -36,49 +31,48 @@ void setCursor(short x, short y) {
 }
 
 void setColor(std::string background, std::string text) {
-    int code = 0;
     const std::string colors[16] = {"BLACK", "DARK_BLUE", "GREEN", "LIGHT_BLUE", "RED", "PURPLE", "YELLOW", "LIGHT_GRAY", "DARK_GRAY",
                                     "BLUE", "LIGHT_GREEN", "LIGHTEST_BLUE", "LIGHT_RED", "LIGHT_PURPLE", "LIGHT_YELLOW", "WHITE"};
-    int bgCode = 0, tCode = 0;
-    for (int i = 0; i < 16; i++) {
+    int bgCode = -1, tCode = -1;
+    for (int i = 0; (bgCode < 0 || tCode < 0) && i < 16; i++) {
         if (colors[i] == background)
             bgCode = i;
         if (colors[i] == text)
             tCode = i;
     }
-    code = bgCode * 16 + tCode;
-    SetConsoleTextAttribute(hConsole, code);
+    SetConsoleTextAttribute(hConsole, (bgCode * 16) + tCode);
 }
 
-void setColor(char ch) {
-    switch (ch) {
-        case '+':
+void setColor(int val) {
+    switch (val) {
+        case PLAYER:
             setColor("PURPLE", "PURPLE");
+            break;
+        case WALL:
+            setColor("WHITE", "WHITE");
+            break;
+        case ENEMY:
+            setColor("LIGHT_RED", "LIGHT_RED");
             break;
         default:
             setColor("BLACK", "LIGHT_GRAY");
     }
 }
 
-std::vector<std::vector<int>> mapCoord;
-int rows, cols;
-int rOffset = 3;
-int cOffset = 6;
-struct {
-    int r;
-    int c;
-} playerPos;
+void reset() {
+    setCursor(0, 0);
+    setColor(0);
+}
 
 void initMap(std::string map) {
-    rows = 1;
-    //std::cout << map.length() << std::endl;
+    rows = 1, cols = 0;
 	for (int i = 0; i < map.length(); i++) {
-        //std::cout << map.at(i);
-		if (map.at(i) == '\n')
+		if (map.at(i) == '\n') {
 			rows++;
+            if (!cols)
+                cols = i / 2;
+        }
 	}
-	cols = map.find('\n') / 2;
-    //std::cout << rows << " " << cols << std::endl;
     mapCoord = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
     std::istringstream f(map);
 	std::string line;
@@ -89,18 +83,22 @@ void initMap(std::string map) {
             int val = 0;
             switch (ch) {
                 case '+':
-                    val = 1;
-                    playerPos.r = r;
-                    playerPos.c = c / 2;
+                    val = PLAYER;
+                    playerPos->r = r;
+                    playerPos->c = c / 2;
                     break;
                 case '*':
-                    val = -1;
+                    val = WALL;
                     break;
                 case '-':
-                    val = -5;
+                    val = ENEMY;
+                    Pos* p = (Pos*)malloc(sizeof(Pos));
+                    p->r = r;
+                    p->c = c / 2;
+                    enemyPos.push_back(p);
                     break;
             }
-            mapCoord[r][(int)(c / 2)] = val;
+            mapCoord[r][c / 2] = val;
         }
         r++;
     }
@@ -109,72 +107,35 @@ void initMap(std::string map) {
         std::cout << "__";
     for (int r = 0; r < rows; r++) {
         setCursor(cOffset - 1, rOffset + r);
-        std::string str = "|";
-        for (int c = 0; c < cols; c++)
-            str += r == rows - 1 ? "__" : "  ";
-        std::cout << str << "|";
-    }
-}
-
-void printScreen() {
-    for (int r = 0; r < rows; r++) {
-        setCursor(cOffset, rOffset + r);
-        setColor("BLACK", "LIGHT_GRAY");
+        setColor(0);
+        std::cout << "|";
         for (int c = 0; c < cols; c++) {
-            switch (mapCoord[r][c]) {
-                case 1:
-                    setColor("PURPLE", "PURPLE");
-                    break;
-                case -1:
-                    setColor("WHITE", "WHITE");
-                    break;
-                case -5:
-                    setColor("LIGHT_RED", "LIGHT_RED");
-                    break;
-                default:
-                    setColor("BLACK", "LIGHT_GRAY");
-            }
+            setColor(mapCoord[r][c]);
             std::cout << (r == rows - 1 ? "__" : "  ");
         }
-        setColor("BLACK", "LIGHT_GRAY");
+        setColor(0);
+        std::cout << "|";
     }
-    setCursor(0, 0);
-    setColor("BLACK", "LIGHT_GRAY");
+    reset();
 }
 
-void keyPress();
-
-int main() {
-    GetWindowRect(console, &r);
-    MoveWindow(console, r.left, r.top, 355, 375, TRUE);
-    removeScrollbar();
-    std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map.txt");
-	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
-    initMap(map);
-    printScreen();
-    keyPress();
-}
-
-void updateDisplay(char ch, int oldR, int oldC, int newR, int newC) {
-    setCursor(cOffset + oldC * 2, rOffset + oldR);
-    setColor(' ');
+void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
+    setCursor(cOffset + (oldC * 2), rOffset + oldR);
+    setColor(0);
     std::cout << (oldR == rows - 1 ? "__" : "  ");
-    setCursor(cOffset + newC * 2, rOffset + newR);
-    setColor(ch);
-    std::cout << ch << ch;
-    setCursor(0, 0);
-    setColor(' ');
+    setCursor(cOffset + (newC * 2), rOffset + newR);
+    setColor(val);
+    std::cout << "  ";
+    reset();
 }
 
-void changePos(int rChange, int cChange) {
-    int newR = playerPos.r + rChange;
-    int newC = playerPos.c + cChange;
-    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] >= 0) {
-        mapCoord[playerPos.r][playerPos.c] = 0;
-        mapCoord[newR][newC] = 1;
-        updateDisplay('+', playerPos.r, playerPos.c, newR, newC);
-        playerPos.r = newR;
-        playerPos.c = newC;
+void changePos(int val, Pos* pos, int newR, int newC) {
+    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] != PLAYER && mapCoord[newR][newC] >= 0) {
+        mapCoord[pos->r][pos->c] = 0;
+        mapCoord[newR][newC] = val;
+        updateDisplay(val, pos->r, pos->c, newR, newC);
+        pos->r = newR;
+        pos->c = newC;
     }
 }
 
@@ -183,22 +144,111 @@ void keyPress() {
     while (kbCode != KB_ESCAPE) {
         if (kbhit()) {
             kbCode = getch();
-            int rChange = 0, cChange = 0;
-            switch (kbCode) {
-                case KB_UP:
-                    rChange--;
-                    break;
-                case KB_DOWN:
-                    rChange++;
-                    break;
-                case KB_LEFT:
-                    cChange--;
-                    break;
-                case KB_RIGHT:
-                    cChange++;
-                    break;
+            if (kbCode == 0 || kbCode == 224) {
+                int rChange = 0, cChange = 0;
+                switch (getch()) {
+                    case KB_UP:
+                        rChange--;
+                        break;
+                    case KB_DOWN:
+                        rChange++;
+                        break;
+                    case KB_LEFT:
+                        cChange--;
+                        break;
+                    case KB_RIGHT:
+                        cChange++;
+                        break;
+                }
+                changePos(PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
+                enemyAI();
+            } else if (kbCode == KB_SPACE) {
+                enemyAI();
             }
-            changePos(rChange, cChange);
         }
+    }
+}
+
+Node* nodeInit(int r, int c, int f, int g, Node* prev) {
+    Node* n = (Node*)malloc(sizeof(Node));
+    n->r = r;
+    n->c = c;
+    n->f = f;
+    n->g = g;
+    n->prev = prev;
+    return n;
+}
+
+std::vector<Node*> createPath(Node* current) {
+    std::vector<Node*> totalPath;
+    totalPath.push_back(current);
+    while (current->prev != NULL) {
+        current = current->prev;
+        totalPath.insert(totalPath.begin(), current);
+    }
+    return totalPath;
+}
+
+int heuristic(Node node) {
+    return std::abs(node.r - playerPos->r) + std::abs(node.c - playerPos->c);
+}
+
+Node* findMin(std::vector<Node*> list) {
+    Node* min = nodeInit(0, 0, INT_MAX, 0, NULL);
+    for (Node* n : list) {
+        if (n->f < min->f)
+            min = n;
+    }
+    return min;
+}
+
+std::vector<Node*> pathfind(Node start, Node goal) {
+    std::vector<Node*> openSet;
+    start.g = 0;
+    start.f = heuristic(start);
+    openSet.push_back(&start);
+    while (!openSet.empty()) {
+        Node* current = findMin(openSet);
+        if (*current == goal)
+            return createPath(current);
+        openSet.erase(std::find(openSet.begin(), openSet.end(), current));
+        int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int i = 0; i < 4; i++) {
+            int newR = current->r + options[i][0];
+            int newC = current->c + options[i][1];
+            if (newR < 0 || newR == rows || newC < 0 || newC == cols || mapCoord[newR][newC] < 0)
+                continue;
+            Node* neighbor = nodeInit(newR, newC, INT_MAX, INT_MAX, current);
+            for (Node* n : openSet) {
+                if (*n == *neighbor) {
+                    neighbor = n;
+                    break;
+                }
+            }
+            int newG = current->g + 1;
+            if (newG < neighbor->g) {
+                neighbor->prev = nodeInit(current->r, current->c, current->f, current->g, current->prev);
+                neighbor->g = newG;
+                neighbor->f = newG + heuristic(*neighbor);
+                bool in = false;
+                for (int j = 0; !in && j < openSet.size(); j++) {
+                    if (*openSet[j] == *neighbor) {
+                        openSet[j] = neighbor;
+                        in = true;
+                    }
+                }
+                if (!in)
+                    openSet.push_back(neighbor);
+            }
+        }
+    }
+    std::vector<Node*> v;
+    return v;
+}
+
+void enemyAI() {
+    for (Pos* pos : enemyPos) {
+        std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
+        changePos(ENEMY, pos, list[1]->r, list[1]->c);
     }
 }
