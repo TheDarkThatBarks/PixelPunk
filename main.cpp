@@ -2,7 +2,7 @@
 
 int main() {
     GetWindowRect(console, &r);
-    MoveWindow(console, r.left, r.top, 355, 375, TRUE);
+    MoveWindow(console, r.left, r.top, 355, 410, TRUE);
     removeScrollbar();
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
@@ -119,6 +119,7 @@ void initMap(std::string map) {
     }
     printScreen();
     reset();
+    kbMode = MOVE;
 }
 
 void printScreen() {
@@ -136,6 +137,34 @@ void printScreen() {
         }
         setColor(0);
         std::cout << "|";
+    }
+
+    setCursor(cOffset + menuCOffset, rOffset + screenSize + menuROffset);
+    int screenWidth = cOffset * 2 + screenSize * 2;
+    int menuLength = 0;
+    for (std::string str : menu)
+        menuLength += str.length();
+    int gap = (screenWidth - menuLength - (2 * 3)) / (menuSize + 1);
+    int gapR = (screenWidth - menuLength - (2 * 3)) % (menuSize + 1);
+    reset();
+    std::cout << screenWidth << " " << menuLength << " " << gap << " " << gapR;
+    if (gapR > 0 && gapR % 2 == 0) {
+        int numGapsToIncreaseOnEachSide = gapR / 2;
+        int counter = 0;
+        setCursor(3, rOffset + screenSize + menuROffset);
+        for (int i = 0; i < menuSize; i++) {
+            std::string gapStr = "";
+            for (int j = 0; j < gap; j++)
+                gapStr += " ";
+            if (i < numGapsToIncreaseOnEachSide || menuSize - i < numGapsToIncreaseOnEachSide)
+                gapStr += " ";
+            std::cout << gapStr << menu[i];
+        }
+        for (int j = 0; j < gap + 1; j++)
+            std::cout << " ";
+    } else if {
+        int numGapsToIncreaseFromMiddle = ((gapR - 1) / 2) + 1;
+
     }
 }
 
@@ -155,17 +184,21 @@ void changePos(int val, Pos* pos, int newR, int newC) {
     if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] != PLAYER && mapCoord[newR][newC] >= 0) {
         mapCoord[pos->r][pos->c] = 0;
         mapCoord[newR][newC] = val;
-        if (val == PLAYER && newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + 1 + screenSize <= rows) {
-            screenPos.r++;
-            printScreen();
-        } else if (val == PLAYER && newR < screenPos.r + screenThreshold && screenPos.r - 1 >= 0) {
-            screenPos.r--;
-            printScreen();
-        } else if (val == PLAYER && newC >= screenPos.c + screenSize - screenThreshold && screenPos.c + 1 + screenSize <= cols) {
-            screenPos.c++;
-            printScreen();
-        } else if (val == PLAYER && newC < screenPos.c + screenThreshold && screenPos.c - 1 >= 0) {
-            screenPos.c--;
+        int rChange = 0, cChange = 0;
+        if (val == PLAYER) {
+            if (newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + screenSize < rows) {
+                rChange++;
+            } else if (screenPos.r - 1 >= 0 && newR < screenPos.r + screenThreshold) {
+                rChange--;
+            } else if (newC >= screenPos.c + screenSize - screenThreshold && screenPos.c + screenSize < cols) {
+                cChange++;
+            } else if (screenPos.c - 1 >= 0 && newC < screenPos.c + screenThreshold) {
+                cChange--;
+            }
+        }
+        if (rChange + cChange != 0) {
+            screenPos.r += rChange;
+            screenPos.c += cChange;
             printScreen();
         } else if (newR >= screenPos.r && newR < screenPos.r + screenSize && newC >= screenPos.c && newC < screenPos.c + screenSize) {
             updateDisplay(val, pos->r, pos->c, newR, newC);

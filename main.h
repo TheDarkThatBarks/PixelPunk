@@ -21,6 +21,9 @@
 #define KB_ESCAPE 27
 #define KB_SPACE 32
 
+#define MOVE 0
+#define MENU 1
+
 #define PLAYER 1
 #define WALL -1
 #define ENEMY -5
@@ -38,9 +41,15 @@ int rows, cols;
 const int rOffset = 3;
 const int cOffset = 6;
 
+const int menuROffset = 2;
+const int menuCOffset = 3;
+int kbMode;
+const int menuSize = 2;
+const std::string menu[menuSize] = {"TEST1", "TEST2"};
+
 Pos screenPos;
-int screenSize = 15;
-int screenThreshold = 3;
+const int screenSize = 15;
+const int screenThreshold = 3;
 
 Pos* playerPos = (Pos*)malloc(sizeof(Pos));
 std::vector<Pos*> enemyPos;
