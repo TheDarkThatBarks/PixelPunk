@@ -139,9 +139,9 @@ void printScreen() {
         std::cout << "|";
     }
 
-    const int w = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
+    const int usableScreen = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
     int gaps[menuSize];
-    gaps[1] = std::round((w - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
+    gaps[1] = std::round((usableScreen - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
     gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
     setCursor(menuCOffset, rOffset + screenSize + menuROffset);
     for (int i = 0; i < menuSize; i++) {
