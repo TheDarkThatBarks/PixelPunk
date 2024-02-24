@@ -2,8 +2,16 @@
 
 int main() {
     GetWindowRect(console, &r);
-    MoveWindow(console, r.left, r.top, 355, 410, TRUE);
+    MoveWindow(console, r.left, r.top, 355, 407, TRUE);
+    SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE)&~WS_SIZEBOX);
+    DWORD style = GetWindowLong(console, GWL_STYLE);
+    style &= ~WS_MAXIMIZEBOX;
+    SetWindowLong(console, GWL_STYLE, style);
+    SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_FRAMECHANGED);
+    DrawMenuBar(GetConsoleWindow());
     removeScrollbar();
+    SetWindowTextW(console, L"Square RPG");
+
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
 	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
@@ -118,14 +126,16 @@ void initMap(std::string map) {
         r++;
     }
     printScreen();
+    printMenu(1);
     reset();
-    kbMode = MOVE;
 }
 
 void printScreen() {
-    setCursor(cOffset, rOffset - 1);
+    std::string str = "";
     for (int c = 0; c < screenSize; c++)
-        std::cout << "__";
+        str += "__";
+    setCursor(cOffset, rOffset - 1);
+    std::cout << str;
     for (int r = 0; r < screenSize; r++) {
         setCursor(cOffset - 1, rOffset + r);
         setColor(0);
@@ -137,20 +147,6 @@ void printScreen() {
         }
         setColor(0);
         std::cout << "|";
-    }
-
-    const int usableScreen = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
-    int gaps[menuSize];
-    gaps[1] = std::round((usableScreen - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
-    gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
-    setCursor(menuCOffset, rOffset + screenSize + menuROffset);
-    for (int i = 0; i < menuSize; i++) {
-        if (i > 1)
-            gaps[i] = std::round(gaps[i - 1] + ((float)(menu[i - 2].length() - menu[i].length()) / 2));
-        std::string str = "";
-        for (int j = 0; j < gaps[i]; j++)
-            str += " ";
-        std::cout << str << menu[i];
     }
 }
 
@@ -195,30 +191,51 @@ void changePos(int val, Pos* pos, int newR, int newC) {
 }
 
 void keyPress() {
-    int kbCode;
+    int kbCode = 0;
     while (kbCode != KB_ESCAPE) {
         if (kbhit()) {
             kbCode = getch();
-            if (kbCode == 0 || kbCode == 224) {
-                int rChange = 0, cChange = 0;
-                switch (getch()) {
-                    case KB_UP:
-                        rChange--;
-                        break;
-                    case KB_DOWN:
-                        rChange++;
-                        break;
-                    case KB_LEFT:
-                        cChange--;
-                        break;
-                    case KB_RIGHT:
-                        cChange++;
-                        break;
+            if (kbMode == MOVE) {
+                if (kbCode == 0 || kbCode == 224) {
+                    int rChange = 0, cChange = 0;
+                    switch (getch()) {
+                        case KB_UP:
+                            rChange--;
+                            break;
+                        case KB_DOWN:
+                            rChange++;
+                            break;
+                        case KB_LEFT:
+                            cChange--;
+                            break;
+                        case KB_RIGHT:
+                            cChange++;
+                            break;
+                    }
+                    changePos(PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
+                    enemyAI();
+                } else if (kbCode == KB_SPACE) {
+                    enemyAI();
+                } else if (kbCode == KB_TAB) {
+                    kbMode = MENU;
+                    updateSelection();
                 }
-                changePos(PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
-                enemyAI();
-            } else if (kbCode == KB_SPACE) {
-                enemyAI();
+            } else if (kbMode == MENU) {
+                if (kbCode == 0 || kbCode == 224) {
+                    switch (getch()) {
+                        case KB_LEFT:
+                            if (selection > 0)
+                                updateSelection('L');
+                            break;
+                        case KB_RIGHT:
+                            if (selection < menuSize - 1)
+                                updateSelection('R');
+                            break;
+                    }
+                } else if (kbCode == KB_TAB) {
+                    kbMode = MOVE;
+                    printMenu(0);
+                }
             }
         }
     }
@@ -306,4 +323,45 @@ void enemyAI() {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
         changePos(ENEMY, pos, list[1]->r, list[1]->c);
     }
+}
+
+void printMenu(int save) {
+    const int usableScreen = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
+    int gaps[menuSize];
+    gaps[1] = std::round((usableScreen - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
+    gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
+    CONSOLE_SCREEN_BUFFER_INFO* info = (CONSOLE_SCREEN_BUFFER_INFO*)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
+    setCursor(menuCOffset, rOffset + screenSize + menuROffset);
+    setColor(0);
+    for (int i = 0; i < menuSize; i++) {
+        if (i > 1)
+            gaps[i] = std::round(gaps[i - 1] + ((float)(menu[i - 2].length() - menu[i].length()) / 2));
+        std::string str = "";
+        for (int j = 0; j < gaps[i]; j++)
+            str += " ";
+        if (save) {
+            GetConsoleScreenBufferInfo(hConsole, info);
+            menuPos.push_back({info->dwCursorPosition.Y, info->dwCursorPosition.X + (int)str.length()});
+        }
+        std::cout << str + menu[i];
+    }
+}
+
+void updateSelection() {
+    setCursor(menuPos[selection].c, menuPos[selection].r);
+    setColor("LIGHT_GRAY", "BLACK");
+    std::cout << menu[selection];
+    reset();
+}
+
+void updateSelection(char dir) {
+    setCursor(menuPos[selection].c, menuPos[selection].r);
+    setColor(0);
+    std::cout << menu[selection];
+    if (dir == 'L') {
+        selection--;
+    } else if (dir == 'R') {
+        selection++;
+    }
+    updateSelection();
 }

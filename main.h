@@ -20,6 +20,7 @@
 #define KB_RIGHT 77
 #define KB_ESCAPE 27
 #define KB_SPACE 32
+#define KB_TAB 9
 
 #define MOVE 0
 #define MENU 1
@@ -43,9 +44,11 @@ const int cOffset = 6;
 
 const int menuROffset = 2;
 const int menuCOffset = 3;
-int kbMode;
 const int menuSize = 3;
 const std::string menu[menuSize] = {"TEST1", "TEST2", "TEST3"};
+int kbMode = MOVE;
+int selection = 0;
+std::vector<Pos> menuPos;
 
 Pos screenPos;
 const int screenSize = 15;
@@ -81,3 +84,7 @@ int heuristic(Node node);
 Node* findMin(std::vector<Node*> list);
 std::vector<Node*> pathfind(Node start, Node goal);
 void enemyAI();
+
+void printMenu(int save);
+void updateSelection();
+void updateSelection(char dir);
