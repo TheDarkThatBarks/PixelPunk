@@ -11,6 +11,7 @@ int main() {
     DrawMenuBar(GetConsoleWindow());
     removeScrollbar();
     SetWindowTextW(console, L"Square RPG");
+    //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");

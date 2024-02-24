@@ -28,6 +28,7 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "-lwinmm",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],
