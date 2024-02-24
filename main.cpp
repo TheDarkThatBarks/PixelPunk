@@ -17,6 +17,7 @@ int main() {
     std::ifstream m("map2.txt");
 	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
+    loadAnimation(map);
     keyPress();
 }
 
@@ -126,9 +127,56 @@ void initMap(std::string map) {
         }
         r++;
     }
-    printScreen();
-    printMenu(1);
+}
+
+void printBox() {
+    std::string str = "";
+    for (int c = 0; c < screenSize; c++)
+        str += "__";
+    for (int r = 0; r < screenSize; r++) {
+        str += "\n";
+        for (int c = 0; c < cOffset - 1; c++)
+            str += " ";
+        str += "|";
+        for (int c = 0; c < screenSize; c++)
+            str += r == screenSize - 1 ? "__" : "  ";
+        str += "|";
+    }
+    setCursor(cOffset, rOffset - 1);
+    printf(str.c_str());
     reset();
+}
+
+void printMapBasic(std::string map) {
+
+}
+
+void clearScreen() {
+    std::string str = "";
+    for (int r = 0; r < rOffset + screenSize; r++) {
+        for (int c = 0; c < cOffset + screenSize * 2 + 1; c++)
+            str += " ";
+        str += "\n";
+    }
+    printf(str.c_str());
+    reset();
+}
+
+void loadAnimation(std::string map) {
+    Sleep(500);
+    printBox();
+    for (int i = 0; i < 3; i++) {
+        Sleep(50);
+        clearScreen();
+        Sleep(50);
+        printBox();
+    }
+    Sleep(500);
+    //printMapBasic(map);
+    //Sleep(500);
+    printScreen();
+    Sleep(1000);
+    printMenu(1);
 }
 
 void printScreen() {
@@ -136,18 +184,18 @@ void printScreen() {
     for (int c = 0; c < screenSize; c++)
         str += "__";
     setCursor(cOffset, rOffset - 1);
-    std::cout << str;
+    printf(str.c_str());
     for (int r = 0; r < screenSize; r++) {
         setCursor(cOffset - 1, rOffset + r);
         setColor(0);
-        std::cout << "|";
+        printf("|");
         for (int c = 0; c < screenSize; c++) {
             Pos pos = screenToMap({r, c});
             setColor(mapCoord[pos.r][pos.c]);
-            std::cout << (r == screenSize - 1 ? "__" : "  ");
+            printf(r == screenSize - 1 ? "__" : "  ");
         }
         setColor(0);
-        std::cout << "|";
+        printf("|");
     }
 }
 
@@ -155,11 +203,11 @@ void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
     Pos oldPos = mapToScreen({oldR, oldC});
     setCursor(cOffset + (oldPos.c * 2), rOffset + oldPos.r);
     setColor(0);
-    std::cout << (oldPos.r == screenSize - 1 ? "__" : "  ");
+    printf(oldPos.r == screenSize - 1 ? "__" : "  ");
     Pos newPos = mapToScreen({newR, newC});
     setCursor(cOffset + (newPos.c * 2), rOffset + newPos.r);
     setColor(val);
-    std::cout << "  ";
+    printf("  ");
     reset();
 }
 
@@ -344,21 +392,21 @@ void printMenu(int save) {
             GetConsoleScreenBufferInfo(hConsole, info);
             menuPos.push_back({info->dwCursorPosition.Y, info->dwCursorPosition.X + (int)str.length()});
         }
-        std::cout << str + menu[i];
+        printf("%s%s", str.c_str(), menu[i].c_str());
     }
 }
 
 void updateSelection() {
     setCursor(menuPos[selection].c, menuPos[selection].r);
     setColor("LIGHT_GRAY", "BLACK");
-    std::cout << menu[selection];
+    printf(menu[selection].c_str());
     reset();
 }
 
 void updateSelection(char dir) {
     setCursor(menuPos[selection].c, menuPos[selection].r);
     setColor(0);
-    std::cout << menu[selection];
+    printf(menu[selection].c_str());
     if (dir == 'L') {
         selection--;
     } else if (dir == 'R') {

@@ -73,6 +73,7 @@ void setColor(int val);
 void reset();
 
 void initMap(std::string map);
+void loadAnimation(std::string map);
 void printScreen();
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC);
 void changePos(int val, Pos* pos, int newR, int newC);
