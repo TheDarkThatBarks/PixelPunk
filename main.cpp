@@ -148,7 +148,20 @@ void printBox() {
 }
 
 void printMapBasic(std::string map) {
-
+    std::istringstream f(map);
+	std::string line;
+    int mapR = 0, screenR = 0;
+    while (getline(f, line)) {
+        if (mapR >= screenPos.r && mapR < screenPos.r + screenSize) {
+            std::string str = line.substr(screenPos.c * 2, screenSize * 2);
+            if (screenR == screenSize - 1)
+                std::replace(str.begin(), str.end(), ' ', '_');
+            setCursor(cOffset, rOffset + screenR);
+            printf(str.c_str());
+            screenR++;
+        }
+        mapR++;
+    }
 }
 
 void clearScreen() {
@@ -158,8 +171,8 @@ void clearScreen() {
             str += " ";
         str += "\n";
     }
-    printf(str.c_str());
     reset();
+    printf(str.c_str());
 }
 
 void loadAnimation(std::string map) {
@@ -172,9 +185,22 @@ void loadAnimation(std::string map) {
         printBox();
     }
     Sleep(500);
-    //printMapBasic(map);
-    //Sleep(500);
+    printMapBasic(map);
+    for (int i = 0; i < 3; i++) {
+        Sleep(50);
+        clearScreen();
+        Sleep(50);
+        printBox();
+        printMapBasic(map);
+    }
+    Sleep(500);
     printScreen();
+    for (int i = 0; i < 3; i++) {
+        Sleep(50);
+        printMapBasic(map);
+        Sleep(50);
+        printScreen();
+    }
     Sleep(1000);
     printMenu(1);
 }
@@ -184,6 +210,7 @@ void printScreen() {
     for (int c = 0; c < screenSize; c++)
         str += "__";
     setCursor(cOffset, rOffset - 1);
+    setColor(0);
     printf(str.c_str());
     for (int r = 0; r < screenSize; r++) {
         setCursor(cOffset - 1, rOffset + r);
