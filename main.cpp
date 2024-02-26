@@ -1,4 +1,5 @@
 #include "main.h"
+void screenLoad();
 
 int main() {
     GetWindowRect(console, &r);
@@ -14,7 +15,7 @@ int main() {
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
-    std::ifstream m("map1.txt");
+    std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
     loadAnimation();
@@ -146,6 +147,7 @@ void printBox() {
 }
 
 void printMapBasic() {
+    setColor(0);
     std::istringstream f(map);
 	std::string line;
     int mapR = 0, screenR = 0;
@@ -172,6 +174,18 @@ void clearScreen() {
     printf(str.c_str());
 }
 
+void screenLoad() {
+    int middle = std::round((float)screenSize / 2);
+    for (int width = 0; width < middle; width++) {
+        std::string str(screenSize * 2, '_');
+        for (int r = 0; r < width * 2 + 1; r++)
+            str += '\n' + std::string(cOffset - 1, ' ') + '|' + std::string(screenSize * 2, r == width * 2 ? '_' : ' ') + '|';
+        setCursor(cOffset, rOffset + middle - width - 2);
+        printf(str.c_str());
+        Sleep(50);
+    }
+}
+
 void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs) {
     Sleep(startDelay);
     (*startFunc)();
@@ -187,9 +201,12 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
+    Sleep(500);
+    screenLoad();
+
     funcs.push_back(&clearScreen);
     funcs.push_back(&printBox);
-    loopFunctions(3, 500, 50, &printBox, funcs);
+    //loopFunctions(3, 500, 50, &printBox, funcs);
 
     funcs.push_back(&printMapBasic);
     loopFunctions(3, 500, 50, &printMapBasic, funcs);
@@ -199,26 +216,27 @@ void loadAnimation() {
     funcs.push_back(&printScreen);
     loopFunctions(3, 500, 50, &printScreen, funcs);
 
-    Sleep(1000);
+    Sleep(500);
     printMenu(1);
 }
 
 void printScreen() {
-    std::string str(screenSize * 2, '_');
-    setCursor(cOffset, rOffset - 1);
-    setColor(0);
-    printf(str.c_str());
+    //std::string str(screenSize * 2, '_');
+    //setCursor(cOffset, rOffset - 1);
+    //setColor(0);
+    //printf(str.c_str());
     for (int r = 0; r < screenSize; r++) {
-        setCursor(cOffset - 1, rOffset + r);
-        setColor(0);
-        printf("|");
+        //setCursor(cOffset - 1, rOffset + r);
+        //setColor(0);
+        //printf("|");
+        setCursor(cOffset, rOffset + r);
         for (int c = 0; c < screenSize; c++) {
             Pos pos = screenToMap({r, c});
             setColor(mapCoord[pos.r][pos.c]);
             printf(r == screenSize - 1 ? "__" : "  ");
         }
-        setColor(0);
-        printf("|");
+        //setColor(0);
+        //printf("|");
     }
 }
 
