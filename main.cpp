@@ -14,7 +14,7 @@ int main() {
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
-    std::ifstream m("map2.txt");
+    std::ifstream m("map1.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
     loadAnimation();
@@ -97,7 +97,7 @@ void initMap(std::string map) {
 	}
     if (rows <= screenSize && cols <= screenSize)
         screenPos = {0, 0};
-    screenPos = {8, 8};
+    screenPos = {0, 0};
     mapCoord = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
     std::istringstream f(map);
 	std::string line;
@@ -112,15 +112,22 @@ void initMap(std::string map) {
                     playerPos->r = r;
                     playerPos->c = c / 2;
                     break;
+                case '1':
+                    screenPos.r = r;
+                    screenPos.c = c / 2;
                 case '*':
                     val = WALL;
                     break;
-                case '-':
+                case '-': {
                     val = ENEMY;
                     Pos* p = (Pos*)malloc(sizeof(Pos));
                     p->r = r;
                     p->c = c / 2;
                     enemyPos.push_back(p);
+                    break;
+                } case '0':
+                    screenPos.r = r;
+                    screenPos.c = c / 2;
                     break;
             }
             mapCoord[r][c / 2] = val;
@@ -130,18 +137,9 @@ void initMap(std::string map) {
 }
 
 void printBox() {
-    std::string str = "";
-    for (int c = 0; c < screenSize; c++)
-        str += "__";
-    for (int r = 0; r < screenSize; r++) {
-        str += "\n";
-        for (int c = 0; c < cOffset - 1; c++)
-            str += " ";
-        str += "|";
-        for (int c = 0; c < screenSize; c++)
-            str += r == screenSize - 1 ? "__" : "  ";
-        str += "|";
-    }
+    std::string str(screenSize * 2, '_');
+    for (int r = 0; r < screenSize; r++)
+        str += '\n' + std::string(cOffset - 1, ' ') + '|' + std::string(screenSize * 2, r == screenSize - 1 ? '_' : ' ') + '|';
     setCursor(cOffset, rOffset - 1);
     printf(str.c_str());
     reset();
@@ -154,6 +152,8 @@ void printMapBasic() {
     while (getline(f, line)) {
         if (mapR >= screenPos.r && mapR < screenPos.r + screenSize) {
             std::string str = line.substr(screenPos.c * 2, screenSize * 2);
+            std::replace(str.begin(), str.end(), '0', ' ');
+            std::replace(str.begin(), str.end(), '1', '*');
             if (screenR == screenSize - 1)
                 std::replace(str.begin(), str.end(), ' ', '_');
             setCursor(cOffset, rOffset + screenR);
@@ -166,11 +166,8 @@ void printMapBasic() {
 
 void clearScreen() {
     std::string str = "";
-    for (int r = 0; r < rOffset + screenSize; r++) {
-        for (int c = 0; c < cOffset + screenSize * 2 + 1; c++)
-            str += " ";
-        str += "\n";
-    }
+    for (int r = 0; r < rOffset + screenSize; r++)
+        str += std::string(cOffset + screenSize * 2 + 1, ' ') + '\n';
     reset();
     printf(str.c_str());
 }
@@ -180,8 +177,7 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
     (*startFunc)();
     for (int i = 0; i < n; i++) {
         Sleep(delay);
-        void(*func)() = funcs[0];
-        (*func)();
+        (*funcs[0])();
         Sleep(delay);
         for (int j = 1; j < funcs.size(); j++)
             (*funcs[j])();
@@ -208,9 +204,7 @@ void loadAnimation() {
 }
 
 void printScreen() {
-    std::string str = "";
-    for (int c = 0; c < screenSize; c++)
-        str += "__";
+    std::string str(screenSize * 2, '_');
     setCursor(cOffset, rOffset - 1);
     setColor(0);
     printf(str.c_str());
@@ -394,12 +388,14 @@ std::vector<Node*> pathfind(Node start, Node goal) {
     }
     std::vector<Node*> v;
     return v;
+    //return std::vector<Node*>();
 }
 
 void enemyAI() {
     for (Pos* pos : enemyPos) {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
-        changePos(ENEMY, pos, list[1]->r, list[1]->c);
+        if (!list.empty())
+            changePos(ENEMY, pos, list[1]->r, list[1]->c);
     }
 }
 
@@ -408,20 +404,19 @@ void printMenu(int save) {
     int gaps[menuSize];
     gaps[1] = std::round((usableScreen - ((menuSize + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (menuSize + 1));
     gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
+
     CONSOLE_SCREEN_BUFFER_INFO* info = (CONSOLE_SCREEN_BUFFER_INFO*)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
+    
     setCursor(menuCOffset, rOffset + screenSize + menuROffset);
     setColor(0);
     for (int i = 0; i < menuSize; i++) {
         if (i > 1)
             gaps[i] = std::round(gaps[i - 1] + ((float)(menu[i - 2].length() - menu[i].length()) / 2));
-        std::string str = "";
-        for (int j = 0; j < gaps[i]; j++)
-            str += " ";
         if (save) {
             GetConsoleScreenBufferInfo(hConsole, info);
-            menuPos.push_back({info->dwCursorPosition.Y, info->dwCursorPosition.X + (int)str.length()});
+            menuPos.push_back({info->dwCursorPosition.Y, info->dwCursorPosition.X + gaps[i]});
         }
-        printf("%s%s", str.c_str(), menu[i].c_str());
+        printf("%s%s", std::string(gaps[i], ' ').c_str(), menu[i].c_str());
     }
 }
 

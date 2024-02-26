@@ -13,6 +13,7 @@
 #include <queue>
 #include <algorithm>
 #include <limits.h>
+#include <stdarg.h>
 
 #define KB_UP 72
 #define KB_DOWN 80
