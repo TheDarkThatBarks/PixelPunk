@@ -15,9 +15,9 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
-	std::string map((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
-    loadAnimation(map);
+    loadAnimation();
     keyPress();
 }
 
@@ -147,7 +147,7 @@ void printBox() {
     reset();
 }
 
-void printMapBasic(std::string map) {
+void printMapBasic() {
     std::istringstream f(map);
 	std::string line;
     int mapR = 0, screenR = 0;
@@ -175,32 +175,34 @@ void clearScreen() {
     printf(str.c_str());
 }
 
-void loadAnimation(std::string map) {
-    Sleep(500);
-    printBox();
-    for (int i = 0; i < 3; i++) {
-        Sleep(50);
-        clearScreen();
-        Sleep(50);
-        printBox();
+void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs) {
+    Sleep(startDelay);
+    (*startFunc)();
+    for (int i = 0; i < n; i++) {
+        Sleep(delay);
+        void(*func)() = funcs[0];
+        (*func)();
+        Sleep(delay);
+        for (int j = 1; j < funcs.size(); j++)
+            (*funcs[j])();
     }
-    Sleep(500);
-    printMapBasic(map);
-    for (int i = 0; i < 3; i++) {
-        Sleep(50);
-        clearScreen();
-        Sleep(50);
-        printBox();
-        printMapBasic(map);
-    }
-    Sleep(500);
-    printScreen();
-    for (int i = 0; i < 3; i++) {
-        Sleep(50);
-        printMapBasic(map);
-        Sleep(50);
-        printScreen();
-    }
+}
+
+void loadAnimation() {
+    std::vector<void (*)()> funcs;
+
+    funcs.push_back(&clearScreen);
+    funcs.push_back(&printBox);
+    loopFunctions(3, 500, 50, &printBox, funcs);
+
+    funcs.push_back(&printMapBasic);
+    loopFunctions(3, 500, 50, &printMapBasic, funcs);
+
+    funcs.clear();
+    funcs.push_back(&printMapBasic);
+    funcs.push_back(&printScreen);
+    loopFunctions(3, 500, 50, &printScreen, funcs);
+
     Sleep(1000);
     printMenu(1);
 }
