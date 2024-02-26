@@ -348,6 +348,7 @@ Node* findMin(std::vector<Node*> list) {
 
 std::vector<Node*> pathfind(Node start, Node goal) {
     std::vector<Node*> openSet;
+    std::vector<Pos> closedSet;
     start.g = 0;
     start.f = heuristic(start);
     openSet.push_back(&start);
@@ -356,11 +357,18 @@ std::vector<Node*> pathfind(Node start, Node goal) {
         if (*current == goal)
             return createPath(current);
         openSet.erase(std::find(openSet.begin(), openSet.end(), current));
+        Pos pos = {current->r, current->c};
+        if (std::find(closedSet.begin(), closedSet.end(), pos) != closedSet.end())
+            continue;
+        closedSet.push_back(pos);
         int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         for (int i = 0; i < 4; i++) {
             int newR = current->r + options[i][0];
             int newC = current->c + options[i][1];
             if (newR < 0 || newR == rows || newC < 0 || newC == cols || mapCoord[newR][newC] < 0)
+                continue;
+            Pos p = {newR, newC};
+            if (std::find(closedSet.begin(), closedSet.end(), p) != closedSet.end())
                 continue;
             Node* neighbor = nodeInit(newR, newC, INT_MAX, INT_MAX, current);
             for (Node* n : openSet) {
@@ -386,9 +394,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
             }
         }
     }
-    std::vector<Node*> v;
-    return v;
-    //return std::vector<Node*>();
+    return std::vector<Node*>();
 }
 
 void enemyAI() {

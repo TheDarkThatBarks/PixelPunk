@@ -36,6 +36,10 @@ RECT r;
 
 struct Pos {
     int r, c;
+
+    bool operator==(Pos p) {
+        return (r == p.r && c == p.c);
+    }
 };
 
 std::string map;
