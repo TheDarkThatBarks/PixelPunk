@@ -20,7 +20,6 @@ int main() {
     std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
-
     loadAnimation();
     keyPress();
 }
@@ -201,21 +200,39 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
     }
 }
 
-void expandWindow() {
+void expandWindow(int width, int time) {
+    time *= 0.9;
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style |= WS_SIZEBOX;
     SetWindowLong(console, GWL_STYLE, style);
-    for (int i = 0; i < 200; i += 2, windowWidth += 2) {
+    float speed = (float)(width - windowWidth) / time;
+    int sleepTime = 0, increment = INT_MAX;
+    for (int i = 20; i < width - windowWidth; i++) {
+        for (int j = 1; (i * j) <= (width - windowWidth); j++) {
+            if (((((float)(width - windowWidth) / j) * i) > (int)(time * 0.98)) && ((((float)(width - windowWidth) / j) * i) < (int)(time * 1.02)) && j < increment) {
+                sleepTime = i;
+                increment = j;
+            }
+        }
+    }
+    while (windowWidth <= width) {
+        windowWidth += increment;
         SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
         removeScrollbar();
-        Sleep(5);
+        Sleep(sleepTime);
     }
+    windowWidth = width;
+    SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
+    removeScrollbar();
     style &= ~WS_SIZEBOX;
     SetWindowLong(console, GWL_STYLE, style);
 }
 
 void loadAnimation() {
     std::vector<void (*)()> funcs;
+
+    Sleep(500);
+    expandWindow(600, 700);
 
     Sleep(500);
     screenLoad();
@@ -235,7 +252,6 @@ void loadAnimation() {
     Sleep(500);
     printMenu(1);
 
-    expandWindow();
 }
 
 void printScreen() {
