@@ -9,8 +9,6 @@
 #include <conio.h>
 #include <vector>
 #include <cmath>
-#include <map>
-#include <queue>
 #include <algorithm>
 #include <limits.h>
 #include <stdarg.h>
@@ -33,6 +31,8 @@
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 HWND console = GetConsoleWindow();
 RECT r;
+int windowWidth;
+int windowHeight;
 
 struct Pos {
     int r, c;

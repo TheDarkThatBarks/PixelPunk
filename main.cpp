@@ -3,21 +3,24 @@ void screenLoad();
 
 int main() {
     GetWindowRect(console, &r);
-    MoveWindow(console, r.left, r.top, 355, 407, TRUE);
-    SetWindowLong(console, GWL_STYLE, GetWindowLong(console, GWL_STYLE)&~WS_SIZEBOX);
+    windowWidth = 355;
+    windowHeight = 407;
+    MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
+    style &= ~WS_SIZEBOX;
     SetWindowLong(console, GWL_STYLE, style);
-    SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_FRAMECHANGED);
-    DrawMenuBar(GetConsoleWindow());
+    SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_NOZORDER);
     removeScrollbar();
     SetWindowTextW(console, L"Square RPG");
+
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     initMap(map);
+
     loadAnimation();
     keyPress();
 }
@@ -198,6 +201,19 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
     }
 }
 
+void expandWindow() {
+    DWORD style = GetWindowLong(console, GWL_STYLE);
+    style |= WS_SIZEBOX;
+    SetWindowLong(console, GWL_STYLE, style);
+    for (int i = 0; i < 200; i += 2, windowWidth += 2) {
+        SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
+        removeScrollbar();
+        Sleep(5);
+    }
+    style &= ~WS_SIZEBOX;
+    SetWindowLong(console, GWL_STYLE, style);
+}
+
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
@@ -218,25 +234,18 @@ void loadAnimation() {
 
     Sleep(500);
     printMenu(1);
+
+    expandWindow();
 }
 
 void printScreen() {
-    //std::string str(screenSize * 2, '_');
-    //setCursor(cOffset, rOffset - 1);
-    //setColor(0);
-    //printf(str.c_str());
     for (int r = 0; r < screenSize; r++) {
-        //setCursor(cOffset - 1, rOffset + r);
-        //setColor(0);
-        //printf("|");
         setCursor(cOffset, rOffset + r);
         for (int c = 0; c < screenSize; c++) {
             Pos pos = screenToMap({r, c});
             setColor(mapCoord[pos.r][pos.c]);
             printf(r == screenSize - 1 ? "__" : "  ");
         }
-        //setColor(0);
-        //printf("|");
     }
 }
 

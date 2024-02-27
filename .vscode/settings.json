@@ -52,6 +52,7 @@
         "xtree": "cpp",
         "algorithm": "cpp",
         "deque": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "thread": "cpp"
     }
 }
