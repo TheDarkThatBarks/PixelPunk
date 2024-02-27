@@ -239,8 +239,10 @@ void expandWindow(int width, int time) {
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
-    /*Sleep(500);
-    expandWindow(600, 700);*/
+    Sleep(500);
+    expandWindow(1000, 700);
+    Sleep(500);
+    conversation("Dialogue1.txt");
 
     Sleep(500);
     screenLoad();
@@ -259,7 +261,6 @@ void loadAnimation() {
 
     Sleep(500);
     printMenu(1);
-
 }
 
 void printScreen() {
@@ -494,4 +495,38 @@ void updateSelection(char dir) {
         selection++;
     }
     updateSelection();
+}
+
+void conversation(std::string dialogue) {
+    std::ifstream d(dialogue);
+	currentDialogue = std::string((std::istreambuf_iterator<char>(d)), std::istreambuf_iterator<char>());
+    std::vector<std::string> lines;
+    size_t pos = 0;
+    std::string delimiter = "\n";
+    while ((pos = currentDialogue.find(delimiter)) != std::string::npos) {
+        std::string str = currentDialogue.substr(0, pos);
+        lines.push_back(str);
+        currentDialogue.erase(0, pos + delimiter.length());
+    }
+    lines.push_back(currentDialogue);
+
+    for (int i = 0; i < lines.size(); i++) {
+        pos = lines[i].find(":");
+        int speaker = std::stoi(lines[i].substr(0, pos));
+        setCursor(conversationCOffset, conversationROffset + 2 * i);
+        setColor(speaker);
+        printf("  ");
+        setColor(0);
+        //printf(" : %s", lines[i].substr(pos + 1).c_str());
+        printConversationText(lines[i].substr(pos + 1));
+        Sleep(500);
+    }
+}
+
+void printConversationText(std::string line) {
+    printf(" : ");
+    for (char c : line) {
+        printf("%c", c);
+        Sleep(10);
+    }
 }
