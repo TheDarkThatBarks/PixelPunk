@@ -53,6 +53,8 @@
         "algorithm": "cpp",
         "deque": "cpp",
         "queue": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "ratio": "cpp",
+        "stop_token": "cpp"
     }
 }

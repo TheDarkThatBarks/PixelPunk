@@ -19,6 +19,11 @@ int main() {
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+    std::fflush(stdout);
+    _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
+    std::wcout << L"Hello, ĐĄßĞĝ!\n";
+    std::fflush(stdout);
+    _setmode(_fileno(stdout), _O_TEXT);
     initMap(map);
     loadAnimation();
     keyPress();
@@ -58,6 +63,9 @@ void setColor(std::string background, std::string text) {
 
 void setColor(int val) {
     switch (val) {
+        case NPC:
+            setColor("LIGHT_BLUE", "LIGHT_BLUE");
+            break;
         case PLAYER:
             setColor("PURPLE", "PURPLE");
             break;
@@ -231,8 +239,8 @@ void expandWindow(int width, int time) {
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
-    Sleep(500);
-    expandWindow(600, 700);
+    /*Sleep(500);
+    expandWindow(600, 700);*/
 
     Sleep(500);
     screenLoad();

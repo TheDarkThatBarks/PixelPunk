@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <limits.h>
 #include <stdarg.h>
+#include <fcntl.h>
+#include <io.h>
 
 #define KB_UP 72
 #define KB_DOWN 80
@@ -24,6 +26,7 @@
 #define MOVE 0
 #define MENU 1
 
+#define NPC 50
 #define PLAYER 1
 #define WALL -1
 #define ENEMY -5
@@ -95,3 +98,7 @@ void enemyAI();
 void printMenu(int save);
 void updateSelection();
 void updateSelection(char dir);
+
+const int conversationROffset = 3;
+const int conversationCOffset = 30;
+void conversation(std::string dialogue);

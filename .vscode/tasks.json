@@ -29,6 +29,7 @@
                 "-g",
                 "${file}",
                 "-lwinmm",
+                "-std=gnu++11",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],
