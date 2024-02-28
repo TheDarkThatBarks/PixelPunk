@@ -11,20 +11,15 @@ std::vector<Pos> menuPos;
 
 const int conversationROffset = 3;
 const int conversationCOffset = cOffset + screenSize * 2 + 7;
-const int convoSize = screenSize * 4;
-const int maxCharsConvo = convoSize - 9;
+const int convoSize = screenSize * 2;
+const int maxCharsConvo = convoSize * 2 - 9;
 std::string currentDialogue;
 
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
     Sleep(500);
-    expandWindow(890, 700);
-    Sleep(500);
-    conversation("Dialogue1.txt");
-
-    Sleep(500);
-    screenLoad();
+    screenLoad(screenSize, screenSize, rOffset, cOffset);
 
     funcs.push_back(&clearScreen);
     funcs.push_back(&printBox);
@@ -40,6 +35,11 @@ void loadAnimation() {
 
     Sleep(500);
     printMenu(1);
+
+    Sleep(500);
+    expandWindow(890, 700);
+    Sleep(500);
+    conversation("Dialogue1.txt");
 }
 
 void printScreen() {
@@ -90,14 +90,15 @@ void clearScreen() {
     printf(str.c_str());
 }
 
-void screenLoad() {
-    int middle = std::round((float)screenSize / 2);
-    for (int width = 0; width < middle; width++) {
-        std::string str(screenSize * 2, '_');
-        for (int r = 0; r < width * 2 + 1; r++)
-            str += '\n' + std::string(cOffset - 1, ' ') + '|' + std::string(screenSize * 2, r == width * 2 ? '_' : ' ') + '|';
-        setCursor(cOffset, rOffset + middle - width - 2);
-        printf(str.c_str());
+void screenLoad(int width, int height, int rowOffset, int colOffset) {
+    int middle = std::round((float)height / 2);
+    for (int h = 0; h < middle; h++) {
+        setCursor(colOffset, rowOffset + middle - 2 - h);
+        printf(std::string(width * 2, '_').c_str());
+        for (int r = middle - h - 1; r < middle + h; r++) {
+            setCursor(colOffset - 1, rowOffset + r);
+            printf("|%s|", std::string(width * 2, r == middle + h - 1 ? '_' : ' ').c_str());
+        }
         Sleep(50);
     }
 }
@@ -173,7 +174,7 @@ void conversation(std::string dialogue) {
     }
     lines.push_back(currentDialogue);
 
-    printConvoBox();
+    screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
     for (int i = 0, r = 0; i < lines.size(); i++) {
@@ -203,6 +204,6 @@ void conversation(std::string dialogue) {
 void printConversationText(std::string line) {
     for (char c : line) {
         printf("%c", c);
-        Sleep(10);
+        Sleep(20);
     }
 }

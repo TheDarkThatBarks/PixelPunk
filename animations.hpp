@@ -33,7 +33,7 @@ void printScreen();
 void printBox();
 void printMapBasic();
 void clearScreen();
-void screenLoad();
+void screenLoad(int width, int height, int rowOffset, int colOffset);
 void printMenu(int save);
 
 void expandWindow(int width, int time);
