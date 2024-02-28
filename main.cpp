@@ -275,10 +275,12 @@ void printScreen() {
 }
 
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
-    Pos oldPos = mapToScreen({oldR, oldC});
-    setCursor(cOffset + (oldPos.c * 2), rOffset + oldPos.r);
-    setColor(0);
-    printf(oldPos.r == screenSize - 1 ? "__" : "  ");
+    if (oldR >= screenPos.r && oldR < screenPos.r + screenSize && oldC >= screenPos.c && oldC < screenPos.c + screenSize) {
+        Pos oldPos = mapToScreen({oldR, oldC});
+        setCursor(cOffset + (oldPos.c * 2), rOffset + oldPos.r);
+        setColor(0);
+        printf(oldPos.r == screenSize - 1 ? "__" : "  ");
+    }
     Pos newPos = mapToScreen({newR, newC});
     setCursor(cOffset + (newPos.c * 2), rOffset + newPos.r);
     setColor(val);
