@@ -1,5 +1,7 @@
+#pragma once
+
 #include <iostream>
-#include <string>
+//#include <string>
 #include <time.h>
 #include <fstream>
 #include <streambuf>
@@ -28,12 +30,6 @@
 #define MOVE 0
 #define MENU 1
 
-#define NPC 50
-#define PLAYER 1
-#define WALL -1
-#define ENEMY -5
-
-HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 HWND console = GetConsoleWindow();
 RECT r;
 int windowWidth;
@@ -78,10 +74,6 @@ struct Node {
 };
 
 void removeScrollbar();
-void setCursor(short x, short y);
-void setColor(std::string background, std::string text);
-void setColor(int val);
-void reset();
 
 void initMap(std::string map);
 void loadAnimation();
