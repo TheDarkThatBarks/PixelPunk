@@ -54,6 +54,7 @@
                 "-g",
                 "${fileDirname}\\main.cpp",
                 "${fileDirname}\\utilities.cpp",
+                "${fileDirname}\\animations.cpp",
                 "-lwinmm",
                 "-std=gnu++11",
                 "-o",

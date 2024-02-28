@@ -1,23 +1,14 @@
 #pragma once
 
 #include <iostream>
-//#include <string>
 #include <time.h>
-#include <fstream>
-#include <streambuf>
-#include <sstream>
-//#include <windows.h>
 #include <stdio.h>
 #include <conio.h>
-//#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <limits.h>
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>
 
-#include "utilities.hpp"
+#include "animations.hpp"
 
 #define KB_UP 72
 #define KB_DOWN 80
@@ -30,35 +21,11 @@
 #define MOVE 0
 #define MENU 1
 
-HWND console = GetConsoleWindow();
-RECT r;
-int windowWidth;
-int windowHeight;
-
-struct Pos {
-    int r, c;
-
-    bool operator==(Pos p) {
-        return (r == p.r && c == p.c);
-    }
-};
-
-std::string map;
-std::vector<std::vector<int>> mapCoord;
 int rows, cols;
-const int rOffset = 3;
-const int cOffset = 6;
 
-const int menuROffset = 2;
-const int menuCOffset = 3;
-const int menuSize = 3;
-const std::string menu[menuSize] = {"TEST1", "TEST2", "TEST3"};
 int kbMode = MOVE;
 int selection = 0;
-std::vector<Pos> menuPos;
 
-Pos screenPos;
-const int screenSize = 15;
 const int screenThreshold = 3;
 
 Pos* playerPos = (Pos*)malloc(sizeof(Pos));
@@ -73,11 +40,7 @@ struct Node {
     }
 };
 
-void removeScrollbar();
-
 void initMap(std::string map);
-void loadAnimation();
-void printScreen();
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC);
 void changePos(int val, Pos* pos, int newR, int newC);
 void keyPress();
@@ -89,14 +52,5 @@ Node* findMin(std::vector<Node*> list);
 std::vector<Node*> pathfind(Node start, Node goal);
 void enemyAI();
 
-void printMenu(int save);
 void updateSelection();
 void updateSelection(char dir);
-
-const int conversationROffset = 3;
-const int conversationCOffset = cOffset + screenSize * 2 + 7;
-const int convoSize = screenSize * 4;
-const int maxCharsConvo = convoSize - 9;
-std::string currentDialogue;
-void conversation(std::string dialogue);
-void printConversationText(std::string line);

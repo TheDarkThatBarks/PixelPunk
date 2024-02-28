@@ -1,6 +1,25 @@
 #include "utilities.hpp"
 
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+HWND console = GetConsoleWindow();
+RECT r;
+
+int windowWidth;
+int windowHeight;
+
+Pos screenPos;
+
+Pos screenToMap(Pos pos) {
+    pos.r += screenPos.r;
+    pos.c += screenPos.c;
+    return pos;
+}
+
+Pos mapToScreen(Pos pos) {
+    pos.r -= screenPos.r;
+    pos.c -= screenPos.c;
+    return pos;
+}
 
 void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs) {
     Sleep(startDelay);
@@ -53,4 +72,19 @@ void setColor(int val) {
 void reset() {
     setCursor(0, 0);
     setColor(0);
+}
+
+void removeScrollbar() {
+	CONSOLE_SCREEN_BUFFER_INFO info;
+	GetConsoleScreenBufferInfo(hConsole, &info);
+	COORD newSize = {
+		(short)(info.srWindow.Right - info.srWindow.Left + 1),
+		(short)(info.srWindow.Bottom - info.srWindow.Top + 1)
+	};
+	SetConsoleScreenBufferSize(hConsole, newSize);
+
+    CONSOLE_CURSOR_INFO* info2 = (CONSOLE_CURSOR_INFO*)malloc(sizeof(CONSOLE_CURSOR_INFO));
+    GetConsoleCursorInfo(hConsole, info2);
+    info2->bVisible = false;
+    SetConsoleCursorInfo(hConsole, info2);
 }
