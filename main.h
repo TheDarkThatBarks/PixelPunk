@@ -100,7 +100,9 @@ void updateSelection();
 void updateSelection(char dir);
 
 const int conversationROffset = 3;
-const int conversationCOffset = cOffset + screenSize * 2 + 6;
+const int conversationCOffset = cOffset + screenSize * 2 + 7;
+const int convoSize = screenSize * 4;
+const int maxCharsConvo = convoSize - 9;
 std::string currentDialogue;
 void conversation(std::string dialogue);
 void printConversationText(std::string line);

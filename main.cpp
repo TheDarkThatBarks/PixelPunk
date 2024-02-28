@@ -19,11 +19,11 @@ int main() {
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
-    std::fflush(stdout);
+    /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
     std::fflush(stdout);
-    _setmode(_fileno(stdout), _O_TEXT);
+    _setmode(_fileno(stdout), _O_TEXT);*/
     initMap(map);
     loadAnimation();
     keyPress();
@@ -240,7 +240,7 @@ void loadAnimation() {
     std::vector<void (*)()> funcs;
 
     Sleep(500);
-    expandWindow(1000, 700);
+    expandWindow(890, 700);
     Sleep(500);
     conversation("Dialogue1.txt");
 
@@ -497,34 +497,56 @@ void updateSelection(char dir) {
     updateSelection();
 }
 
+void printConvoBox() {
+    setCursor(conversationCOffset, conversationROffset - 1);
+    printf(std::string(convoSize, '_').c_str());
+    for (int r = 0; r < screenSize; r++) {
+        setCursor(conversationCOffset - 1, conversationROffset + r);
+        printf("|%s|", std::string(convoSize, r == screenSize - 1 ? '_' : ' ').c_str());
+    }
+    reset();
+}
+
 void conversation(std::string dialogue) {
     std::ifstream d(dialogue);
 	currentDialogue = std::string((std::istreambuf_iterator<char>(d)), std::istreambuf_iterator<char>());
     std::vector<std::string> lines;
     size_t pos = 0;
-    std::string delimiter = "\n";
-    while ((pos = currentDialogue.find(delimiter)) != std::string::npos) {
+    while ((pos = currentDialogue.find('\n')) != std::string::npos) {
         std::string str = currentDialogue.substr(0, pos);
         lines.push_back(str);
-        currentDialogue.erase(0, pos + delimiter.length());
+        currentDialogue.erase(0, pos + 1);
     }
     lines.push_back(currentDialogue);
 
-    for (int i = 0; i < lines.size(); i++) {
+    printConvoBox();
+    Sleep(500);
+
+    for (int i = 0, r = 0; i < lines.size(); i++) {
         pos = lines[i].find(":");
         int speaker = std::stoi(lines[i].substr(0, pos));
-        setCursor(conversationCOffset, conversationROffset + 2 * i);
+        setCursor(conversationCOffset + 2, conversationROffset + 2 * i + r + 1);
         setColor(speaker);
         printf("  ");
         setColor(0);
-        //printf(" : %s", lines[i].substr(pos + 1).c_str());
-        printConversationText(lines[i].substr(pos + 1));
+        printf(" :");
+        std::string str = lines[i].substr(pos + 1);
+        std::vector<std::string> strs;
+        while (str.length() > maxCharsConvo) {
+            strs.push_back(str.substr(0, maxCharsConvo));
+            str.erase(0, maxCharsConvo);
+        }
+        strs.push_back(str);
+        for (int j = 0; j < strs.size(); j++) {
+            r += (j ? 1 : 0);
+            setCursor(conversationCOffset + 7, conversationROffset + 2 * i + r + 1);
+            printConversationText(strs[j]);
+        }
         Sleep(500);
     }
 }
 
 void printConversationText(std::string line) {
-    printf(" : ");
     for (char c : line) {
         printf("%c", c);
         Sleep(10);
