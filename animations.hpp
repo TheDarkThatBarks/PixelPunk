@@ -37,5 +37,6 @@ void screenLoad();
 void printMenu(int save);
 
 void expandWindow(int width, int time);
+void printConvoBox();
 void conversation(std::string dialogue);
 void printConversationText(std::string line);
