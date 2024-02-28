@@ -4,16 +4,18 @@
 #include <fstream>
 #include <streambuf>
 #include <sstream>
-#include <windows.h>
+//#include <windows.h>
 #include <stdio.h>
 #include <conio.h>
-#include <vector>
+//#include <vector>
 #include <cmath>
 #include <algorithm>
 #include <limits.h>
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>
+
+#include "utilities.hpp"
 
 #define KB_UP 72
 #define KB_DOWN 80
