@@ -34,9 +34,12 @@ void printBox();
 void printMapBasic();
 void clearScreen();
 void screenLoad(int width, int height, int rowOffset, int colOffset);
+void screenClose(int width, int height, int rowOffset, int colOffset);
 void printMenu(int save);
 
-void expandWindow(int width, int time);
+void changeWindow(int width, int time);
+
 void printConvoBox();
+//void clearConvoBox();
 void conversation(std::string dialogue);
 void printConversationText(std::string line);

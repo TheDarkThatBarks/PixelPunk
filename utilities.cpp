@@ -4,8 +4,8 @@ HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 HWND console = GetConsoleWindow();
 RECT r;
 
-int windowWidth;
-int windowHeight;
+int windowWidth = ORIGINAL_WINDOW_WIDTH;
+int windowHeight = ORIGINAL_WINDOW_HEIGHT;
 
 Pos screenPos;
 
@@ -33,8 +33,8 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
     }
 }
 
-void setCursor(short x, short y) {
-    SetConsoleCursorPosition(hConsole, {x, y});
+void setCursor(short r, short c) {
+    SetConsoleCursorPosition(hConsole, {c, r});
 }
 
 void setColor(std::string background, std::string text) {

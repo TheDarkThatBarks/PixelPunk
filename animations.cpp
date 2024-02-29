@@ -37,14 +37,18 @@ void loadAnimation() {
     printMenu(1);
 
     Sleep(500);
-    expandWindow(890, 700);
+    changeWindow(890, 700);
     Sleep(500);
     conversation("Dialogue1.txt");
+    Sleep(1000);
+    //clearConvoBox();
+    screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
 }
 
 void printScreen() {
     for (int r = 0; r < screenSize; r++) {
-        setCursor(cOffset, rOffset + r);
+        setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize; c++) {
             Pos pos = screenToMap({r, c});
             setColor(mapCoord[pos.r][pos.c]);
@@ -57,7 +61,7 @@ void printBox() {
     std::string str(screenSize * 2, '_');
     for (int r = 0; r < screenSize; r++)
         str += '\n' + std::string(cOffset - 1, ' ') + '|' + std::string(screenSize * 2, r == screenSize - 1 ? '_' : ' ') + '|';
-    setCursor(cOffset, rOffset - 1);
+    setCursor(rOffset - 1, cOffset);
     printf(str.c_str());
     reset();
 }
@@ -74,7 +78,7 @@ void printMapBasic() {
             std::replace(str.begin(), str.end(), '1', '*');
             if (screenR == screenSize - 1)
                 std::replace(str.begin(), str.end(), ' ', '_');
-            setCursor(cOffset, rOffset + screenR);
+            setCursor(rOffset + screenR, cOffset);
             printf(str.c_str());
             screenR++;
         }
@@ -93,14 +97,33 @@ void clearScreen() {
 void screenLoad(int width, int height, int rowOffset, int colOffset) {
     int middle = std::round((float)height / 2);
     for (int h = 0; h < middle; h++) {
-        setCursor(colOffset, rowOffset + middle - 2 - h);
+        setCursor(rowOffset + middle - 2 - h, colOffset);
         printf(std::string(width * 2, '_').c_str());
         for (int r = middle - h - 1; r < middle + h; r++) {
-            setCursor(colOffset - 1, rowOffset + r);
+            setCursor(rowOffset + r, colOffset - 1);
             printf("|%s|", std::string(width * 2, r == middle + h - 1 ? '_' : ' ').c_str());
         }
         Sleep(50);
     }
+}
+
+void screenClose(int width, int height, int rowOffset, int colOffset) {
+    int middle = std::round((float)height / 2);
+    for (int h = middle - 2; h >= 0; h--) {
+        setCursor(rowOffset + middle - 3 - h, colOffset - 1);
+        printf(std::string(width * 2 + 2, ' ').c_str());
+        setCursor(rowOffset + middle - 2 - h, colOffset - 1);
+        printf(" %s ", std::string(width * 2, '_').c_str());
+        setCursor(rowOffset + middle + h - 1, colOffset - 1);
+        printf("|%s|", std::string(width * 2, '_').c_str());
+        setCursor(rowOffset + middle + h, colOffset - 1);
+        printf(std::string(width * 2 + 2, ' ').c_str());
+        Sleep(50);
+    }
+    setCursor(rowOffset + middle - 2, colOffset - 1);
+    printf(std::string(width * 2 + 2, ' ').c_str());
+    setCursor(rowOffset + middle - 1, colOffset - 1);
+    printf(std::string(width * 2 + 2, ' ').c_str());
 }
 
 void printMenu(int save) {
@@ -111,7 +134,7 @@ void printMenu(int save) {
 
     CONSOLE_SCREEN_BUFFER_INFO* info = (CONSOLE_SCREEN_BUFFER_INFO*)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
     
-    setCursor(menuCOffset, rOffset + screenSize + menuROffset);
+    setCursor(rOffset + screenSize + menuROffset, menuCOffset);
     setColor(0);
     for (int i = 0; i < MENU_SIZE; i++) {
         if (i > 1)
@@ -122,28 +145,39 @@ void printMenu(int save) {
         }
         printf("%s%s", std::string(gaps[i], ' ').c_str(), menu[i].c_str());
     }
+    reset();
 }
 
-void expandWindow(int width, int time) {
+void changeWindow(int width, int time) {
     time *= 0.9;
-    DWORD style = GetWindowLong(console, GWL_STYLE);
-    style |= WS_SIZEBOX;
-    SetWindowLong(console, GWL_STYLE, style);
-    float speed = (float)(width - windowWidth) / time;
     int sleepTime = 0, increment = INT_MAX;
-    for (int i = 20; i < width - windowWidth; i++) {
-        for (int j = 1; (i * j) <= (width - windowWidth); j++) {
-            if (((((float)(width - windowWidth) / j) * i) > (int)(time * 0.98)) && ((((float)(width - windowWidth) / j) * i) < (int)(time * 1.02)) && j < increment) {
+    for (int i = 20; i < std::abs(width - windowWidth); i++) {
+        for (int j = 1; j < increment && i * j <= std::abs(width - windowWidth); j++) {
+            if (((float)std::abs(width - windowWidth) / j) * i > time * 0.98 && ((float)std::abs(width - windowWidth) / j) * i < time * 1.02) {
                 sleepTime = i;
                 increment = j;
             }
         }
     }
-    while (windowWidth <= width) {
-        windowWidth += increment;
-        SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
-        removeScrollbar();
-        Sleep(sleepTime);
+    if (sleepTime == 0 && increment == INT_MAX)
+        return;
+    DWORD style = GetWindowLong(console, GWL_STYLE);
+    style |= WS_SIZEBOX;
+    SetWindowLong(console, GWL_STYLE, style);
+    if (width > windowWidth) {
+        while (windowWidth <= width) {
+            windowWidth += increment;
+            SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
+            removeScrollbar();
+            Sleep(sleepTime);
+        }
+    } else {
+        while (windowWidth >= width) {
+            windowWidth -= increment;
+            SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
+            removeScrollbar();
+            Sleep(sleepTime);
+        }
     }
     windowWidth = width;
     SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
@@ -153,14 +187,22 @@ void expandWindow(int width, int time) {
 }
 
 void printConvoBox() {
-    setCursor(conversationCOffset, conversationROffset - 1);
+    setCursor(conversationROffset - 1, conversationCOffset);
     printf(std::string(convoSize, '_').c_str());
     for (int r = 0; r < screenSize; r++) {
-        setCursor(conversationCOffset - 1, conversationROffset + r);
+        setCursor(conversationROffset + r, conversationCOffset - 1);
         printf("|%s|", std::string(convoSize, r == screenSize - 1 ? '_' : ' ').c_str());
     }
     reset();
 }
+
+/*void clearConvoBox() {
+    for (int r = -1; r < screenSize; r++) {
+        setCursor(r + conversationROffset, conversationCOffset - 1);
+        printf(std::string(convoSize * 2 + 2, ' ').c_str());
+    }
+    reset();
+}*/
 
 void conversation(std::string dialogue) {
     std::ifstream d(dialogue);
@@ -180,11 +222,12 @@ void conversation(std::string dialogue) {
     for (int i = 0, r = 0; i < lines.size(); i++) {
         pos = lines[i].find(":");
         int speaker = std::stoi(lines[i].substr(0, pos));
-        setCursor(conversationCOffset + 2, conversationROffset + 2 * i + r + 1);
+        setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 2);
         setColor(speaker);
         printf("  ");
         setColor(0);
         printf(" :");
+        Sleep(500);
         std::string str = lines[i].substr(pos + 1);
         std::vector<std::string> strs;
         while (str.length() > maxCharsConvo) {
@@ -194,7 +237,7 @@ void conversation(std::string dialogue) {
         strs.push_back(str);
         for (int j = 0; j < strs.size(); j++) {
             r += (j ? 1 : 0);
-            setCursor(conversationCOffset + 7, conversationROffset + 2 * i + r + 1);
+            setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 7);
             printConversationText(strs[j]);
         }
         Sleep(500);

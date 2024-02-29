@@ -9,6 +9,9 @@
 #define WALL -1
 #define ENEMY -5
 
+#define ORIGINAL_WINDOW_WIDTH 355
+#define ORIGINAL_WINDOW_HEIGHT 408
+
 extern HANDLE hConsole;
 extern HWND console;
 extern RECT r;
@@ -31,7 +34,7 @@ Pos screenToMap(Pos pos);
 Pos mapToScreen(Pos pos);
 
 void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs);
-void setCursor(short x, short y);
+void setCursor(short r, short c);
 void setColor(std::string background, std::string text);
 void setColor(int val);
 void reset();

@@ -5,8 +5,6 @@ std::vector<std::vector<int>> mapCoord;
 
 int main() {
     GetWindowRect(console, &r);
-    windowWidth = 355;
-    windowHeight = 407;
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
@@ -84,12 +82,12 @@ void initMap(std::string map) {
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
     if (oldR >= screenPos.r && oldR < screenPos.r + screenSize && oldC >= screenPos.c && oldC < screenPos.c + screenSize) {
         Pos oldPos = mapToScreen({oldR, oldC});
-        setCursor(cOffset + (oldPos.c * 2), rOffset + oldPos.r);
+        setCursor(rOffset + oldPos.r, cOffset + (oldPos.c * 2));
         setColor(0);
         printf(oldPos.r == screenSize - 1 ? "__" : "  ");
     }
     Pos newPos = mapToScreen({newR, newC});
-    setCursor(cOffset + (newPos.c * 2), rOffset + newPos.r);
+    setCursor(rOffset + newPos.r, cOffset + (newPos.c * 2));
     setColor(val);
     printf("  ");
     reset();
@@ -267,14 +265,14 @@ void enemyAI() {
 }
 
 void updateSelection() {
-    setCursor(menuPos[selection].c, menuPos[selection].r);
+    setCursor(menuPos[selection].r, menuPos[selection].c);
     setColor("LIGHT_GRAY", "BLACK");
     printf(menu[selection].c_str());
     reset();
 }
 
 void updateSelection(char dir) {
-    setCursor(menuPos[selection].c, menuPos[selection].r);
+    setCursor(menuPos[selection].r, menuPos[selection].c);
     setColor(0);
     printf(menu[selection].c_str());
     if (dir == 'L') {
