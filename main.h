@@ -17,6 +17,7 @@
 #define KB_ESCAPE 27
 #define KB_SPACE 32
 #define KB_TAB 9
+#define KB_ENTER 13
 
 #define MOVE 0
 #define MENU 1

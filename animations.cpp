@@ -37,13 +37,13 @@ void loadAnimation() {
     printMenu(1);
 
     Sleep(500);
-    changeWindow(890, 700);
+    /*changeWindow(890, 700);
     Sleep(500);
     conversation("Dialogue1.txt");
     Sleep(1000);
     //clearConvoBox();
     screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
-    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
 }
 
 void printScreen() {

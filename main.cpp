@@ -17,7 +17,7 @@ int main() {
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
-    std::ifstream m("map2.txt");
+    std::ifstream m("map3.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -49,31 +49,39 @@ void initMap(std::string map) {
         for (int c = 0; c < line.length(); c += 2) {
             char ch = line.at(c);
             int val = 0;
-            switch (ch) {
-                case '+':
-                    val = PLAYER;
-                    playerPos->r = r;
-                    playerPos->c = c / 2;
-                    break;
-                case '1':
-                    screenPos.r = r;
-                    screenPos.c = c / 2;
-                case '*':
-                    val = WALL;
-                    break;
-                case '-': {
-                    val = ENEMY;
-                    Pos* p = (Pos*)malloc(sizeof(Pos));
-                    p->r = r;
-                    p->c = c / 2;
-                    enemyPos.push_back(p);
-                    break;
-                } case '0':
-                    screenPos.r = r;
-                    screenPos.c = c / 2;
-                    break;
+            if (ch == '\\') {
+                ch = line.at(c + 1);
+                switch (ch) {
+                    case '!':
+                        val = NPC;
+                        break;
+                    case '+':
+                        val = PLAYER;
+                        playerPos->r = r;
+                        playerPos->c = c / 2;
+                        break;
+                    case '1':
+                        screenPos.r = r;
+                        screenPos.c = c / 2;
+                    case '*':
+                        val = WALL;
+                        break;
+                    case '-': {
+                        val = ENEMY;
+                        Pos* p = (Pos*)malloc(sizeof(Pos));
+                        p->r = r;
+                        p->c = c / 2;
+                        enemyPos.push_back(p);
+                        break;
+                    } case '0':
+                        screenPos.r = r;
+                        screenPos.c = c / 2;
+                        break;
+                }
+                mapCoord[r][c / 2] = val;
+            } else {
+
             }
-            mapCoord[r][c / 2] = val;
         }
         r++;
     }
@@ -94,7 +102,7 @@ void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
 }
 
 void changePos(int val, Pos* pos, int newR, int newC) {
-    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] != PLAYER && mapCoord[newR][newC] >= 0) {
+    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && mapCoord[newR][newC] == 0) {
         mapCoord[pos->r][pos->c] = 0;
         mapCoord[newR][newC] = val;
         int rChange = 0, cChange = 0;
@@ -150,6 +158,19 @@ void keyPress() {
                 } else if (kbCode == KB_TAB) {
                     kbMode = MENU;
                     updateSelection();
+                } else if (kbCode == KB_ENTER) {
+                    bool foundNPC = false;
+                    const int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+                    for (int i = 0; !foundNPC && i < 4; i++)
+                        foundNPC = mapCoord[playerPos->r + options[i][0]][playerPos->c + options[i][1]] == NPC;
+                    if (foundNPC) {
+                        changeWindow(890, 700);
+                        Sleep(500);
+                        conversation("Dialogue1.txt");
+                        Sleep(1000);
+                        screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
+                        changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
+                    }
                 }
             } else if (kbMode == MENU) {
                 if (kbCode == 0 || kbCode == 224) {
@@ -220,11 +241,11 @@ std::vector<Node*> pathfind(Node start, Node goal) {
         if (std::find(closedSet.begin(), closedSet.end(), pos) != closedSet.end())
             continue;
         closedSet.push_back(pos);
-        int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        const int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         for (int i = 0; i < 4; i++) {
             int newR = current->r + options[i][0];
             int newC = current->c + options[i][1];
-            if (newR < 0 || newR == rows || newC < 0 || newC == cols || mapCoord[newR][newC] < 0)
+            if (newR < 0 || newR == rows || newC < 0 || newC == cols || !(mapCoord[newR][newC] == 0 || mapCoord[newR][newC] == PLAYER))
                 continue;
             Pos p = {newR, newC};
             if (std::find(closedSet.begin(), closedSet.end(), p) != closedSet.end())
