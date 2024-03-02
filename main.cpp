@@ -2,6 +2,8 @@
 
 std::string map;
 std::vector<std::vector<int>> mapCoord;
+std::vector<std::string> mapText;
+int textIndex = 0;
 
 int main() {
     GetWindowRect(console, &r);
@@ -53,10 +55,10 @@ void initMap(std::string map) {
                 ch = line.at(c + 1);
                 switch (ch) {
                     case '!':
-                        val = NPC;
+                        val = M_NPC;
                         break;
                     case '+':
-                        val = PLAYER;
+                        val = M_PLAYER;
                         playerPos->r = r;
                         playerPos->c = c / 2;
                         break;
@@ -64,10 +66,10 @@ void initMap(std::string map) {
                         screenPos.r = r;
                         screenPos.c = c / 2;
                     case '*':
-                        val = WALL;
+                        val = M_WALL;
                         break;
                     case '-': {
-                        val = ENEMY;
+                        val = M_ENEMY;
                         Pos* p = (Pos*)malloc(sizeof(Pos));
                         p->r = r;
                         p->c = c / 2;
@@ -78,10 +80,12 @@ void initMap(std::string map) {
                         screenPos.c = c / 2;
                         break;
                 }
-                mapCoord[r][c / 2] = val;
-            } else {
-
+            } else if ((ch == ' ' && line.at(c + 1) != ' ') || ch != ' ') {
+                val = M_TEXT + textIndex++;
+                std::string str = line.substr(c, 2);
+                mapText.push_back(str);
             }
+            mapCoord[r][c / 2] = val;
         }
         r++;
     }
@@ -106,7 +110,7 @@ void changePos(int val, Pos* pos, int newR, int newC) {
         mapCoord[pos->r][pos->c] = 0;
         mapCoord[newR][newC] = val;
         int rChange = 0, cChange = 0;
-        if (val == PLAYER) {
+        if (val == M_PLAYER) {
             if (newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + screenSize < rows) {
                 rChange++;
             } else if (screenPos.r - 1 >= 0 && newR < screenPos.r + screenThreshold) {
@@ -151,7 +155,7 @@ void keyPress() {
                             cChange++;
                             break;
                     }
-                    changePos(PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
+                    changePos(M_PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
                     enemyAI();
                 } else if (kbCode == KB_SPACE) {
                     enemyAI();
@@ -162,7 +166,7 @@ void keyPress() {
                     bool foundNPC = false;
                     const int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
                     for (int i = 0; !foundNPC && i < 4; i++)
-                        foundNPC = mapCoord[playerPos->r + options[i][0]][playerPos->c + options[i][1]] == NPC;
+                        foundNPC = mapCoord[playerPos->r + options[i][0]][playerPos->c + options[i][1]] == M_NPC;
                     if (foundNPC) {
                         changeWindow(890, 700);
                         Sleep(500);
@@ -245,7 +249,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
         for (int i = 0; i < 4; i++) {
             int newR = current->r + options[i][0];
             int newC = current->c + options[i][1];
-            if (newR < 0 || newR == rows || newC < 0 || newC == cols || !(mapCoord[newR][newC] == 0 || mapCoord[newR][newC] == PLAYER))
+            if (newR < 0 || newR == rows || newC < 0 || newC == cols || !(mapCoord[newR][newC] == 0 || mapCoord[newR][newC] == M_PLAYER))
                 continue;
             Pos p = {newR, newC};
             if (std::find(closedSet.begin(), closedSet.end(), p) != closedSet.end())
@@ -281,7 +285,7 @@ void enemyAI() {
     for (Pos* pos : enemyPos) {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
         if (!list.empty())
-            changePos(ENEMY, pos, list[1]->r, list[1]->c);
+            changePos(M_ENEMY, pos, list[1]->r, list[1]->c);
     }
 }
 

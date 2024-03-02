@@ -52,16 +52,16 @@ void setColor(std::string background, std::string text) {
 
 void setColor(int val) {
     switch (val) {
-        case NPC:
+        case M_NPC:
             setColor("LIGHT_BLUE", "LIGHT_BLUE");
             break;
-        case PLAYER:
+        case M_PLAYER:
             setColor("PURPLE", "PURPLE");
             break;
-        case WALL:
+        case M_WALL:
             setColor("WHITE", "WHITE");
             break;
-        case ENEMY:
+        case M_ENEMY:
             setColor("LIGHT_RED", "LIGHT_RED");
             break;
         default:

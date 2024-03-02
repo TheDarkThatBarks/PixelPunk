@@ -4,10 +4,11 @@
 #include <windows.h>
 #include <string>
 
-#define NPC 50
-#define PLAYER 1
-#define WALL -1
-#define ENEMY -5
+#define M_NPC 50
+#define M_PLAYER 1
+#define M_WALL -1
+#define M_ENEMY -5
+#define M_TEXT 100
 
 #define ORIGINAL_WINDOW_WIDTH 355
 #define ORIGINAL_WINDOW_HEIGHT 408
@@ -28,6 +29,8 @@ struct Pos {
 };
 
 extern std::vector<std::vector<int>> mapCoord;
+extern std::vector<std::string> mapText;
+extern int textIndex;
 
 extern Pos screenPos;
 Pos screenToMap(Pos pos);

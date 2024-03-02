@@ -51,8 +51,15 @@ void printScreen() {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize; c++) {
             Pos pos = screenToMap({r, c});
-            setColor(mapCoord[pos.r][pos.c]);
-            printf(r == screenSize - 1 ? "__" : "  ");
+            int val = mapCoord[pos.r][pos.c];
+            if (val >= M_TEXT) {
+                setColor(0);
+                std::string str = mapText[val - M_TEXT];
+                printf(mapText[val - M_TEXT].c_str());
+            } else {
+                setColor(mapCoord[pos.r][pos.c]);
+                printf(r == screenSize - 1 ? "__" : "  ");
+            }
         }
     }
 }
