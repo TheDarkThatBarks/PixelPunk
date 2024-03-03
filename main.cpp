@@ -80,10 +80,9 @@ void initMap(std::string map) {
                         screenPos.c = c / 2;
                         break;
                 }
-            } else if ((ch == ' ' && line.at(c + 1) != ' ') || ch != ' ') {
+            } else if (ch != ' ' || line.at(c + 1) != ' ') {
                 val = M_TEXT + textIndex++;
-                std::string str = line.substr(c, 2);
-                mapText.push_back(str);
+                mapText.push_back(line.substr(c, 2));
             }
             mapCoord[r][c / 2] = val;
         }

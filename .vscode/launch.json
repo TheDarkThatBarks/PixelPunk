@@ -1,22 +1,13 @@
 {
     "configurations": [
         {
-            "name": "Start External Program",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/main.exe",
-            "console": "externalTerminal",
-            "cwd": "${workspaceRoot}",
-            "preLaunchTask": "C/C++: g++.exe build active file"
-        },
-        {
-            "name": "C/C++: g++.exe build and debug active file",
+            "name": "C/C++: g++.exe build and debug project",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}\\main.exe",
+            "program": "${workspaceRoot}/main.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceRoot}",
             "environment": [],
             "externalConsole": true,
             "MIMode": "gdb",
@@ -33,7 +24,6 @@
                     "ignoreFailures": true
                 }
             ],
-            //"preLaunchTask": "C/C++: g++.exe build active file"
             "preLaunchTask": "C/C++: g++.exe build project"
         }
     ],
