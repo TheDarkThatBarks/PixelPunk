@@ -6,12 +6,14 @@
             "command": "C:\\MinGW\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
+                "-Wall",
+                "-Wextra",
                 "-g",
-                "${workspaceRoot}\\main.cpp",
-                "${workspaceRoot}\\utilities.cpp",
-                "${workspaceRoot}\\animations.cpp",
+                "${workspaceRoot}\\main.o",
+                "${workspaceRoot}\\utilities.o",
+                "${workspaceRoot}\\animations.o",
                 "-lwinmm",
-                "-std=gnu++11",
+                //"-std=gnu++11",
                 "-o",
                 "${workspaceRoot}\\main.exe"
             ],
@@ -24,7 +26,69 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "dependsOn": [
+                "main",
+                "utilities",
+                "animations"
+            ]
+        },
+        {
+            "type": "cppbuild",
+            "label": "main",
+            "command": "C:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-Wall",
+                "-Wextra",
+                "-g",
+                "${workspaceRoot}\\main.cpp",
+                "-c",
+                "-o",
+                "${workspaceRoot}\\main.o"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "utilities",
+            "command": "C:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-Wall",
+                "-Wextra",
+                "-g",
+                "${workspaceRoot}\\utilities.cpp",
+                "-c",
+                "-o",
+                "${workspaceRoot}\\utilities.o"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "animations",
+            "command": "C:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-Wall",
+                "-Wextra",
+                "-g",
+                "${workspaceRoot}\\animations.cpp",
+                "-c",
+                "-o",
+                "${workspaceRoot}\\animations.o"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
         }
     ],
     "version": "2.0.0"

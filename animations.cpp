@@ -226,7 +226,7 @@ void conversation(std::string dialogue) {
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
-    for (int i = 0, r = 0; i < lines.size(); i++) {
+    for (int i = 0, r = 0; i < (int)lines.size(); i++) {
         pos = lines[i].find(":");
         int speaker = std::stoi(lines[i].substr(0, pos));
         setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 2);
@@ -242,7 +242,7 @@ void conversation(std::string dialogue) {
             str.erase(0, maxCharsConvo);
         }
         strs.push_back(str);
-        for (int j = 0; j < strs.size(); j++) {
+        for (int j = 0; j < (int)strs.size(); j++) {
             r += (j ? 1 : 0);
             setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 7);
             printConversationText(strs[j]);

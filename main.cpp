@@ -1,7 +1,6 @@
 #include "main.h"
 
 std::string map;
-std::vector<std::vector<int>> mapCoord;
 std::vector<std::string> mapText;
 int textIndex = 0;
 
@@ -33,7 +32,7 @@ int main() {
 
 void initMap(std::string map) {
     rows = 1, cols = 0;
-	for (int i = 0; i < map.length(); i++) {
+	for (int i = 0; i < (int)map.length(); i++) {
 		if (map.at(i) == '\n') {
 			rows++;
             if (!cols)
@@ -48,7 +47,7 @@ void initMap(std::string map) {
 	std::string line;
     int r = 0;
     while (getline(f, line)) {
-        for (int c = 0; c < line.length(); c += 2) {
+        for (int c = 0; c < (int)line.length(); c += 2) {
             char ch = line.at(c);
             int val = 0;
             if (ch == '\\') {
@@ -266,7 +265,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
                 neighbor->g = newG;
                 neighbor->f = newG + heuristic(*neighbor);
                 bool in = false;
-                for (int j = 0; !in && j < openSet.size(); j++) {
+                for (int j = 0; !in && j < (int)openSet.size(); j++) {
                     if (*openSet[j] == *neighbor) {
                         openSet[j] = neighbor;
                         in = true;

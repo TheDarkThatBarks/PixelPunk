@@ -8,6 +8,7 @@ int windowWidth = ORIGINAL_WINDOW_WIDTH;
 int windowHeight = ORIGINAL_WINDOW_HEIGHT;
 
 Pos screenPos;
+std::vector<std::vector<int>> mapCoord;
 
 Pos screenToMap(Pos pos) {
     pos.r += screenPos.r;
@@ -28,7 +29,7 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
         Sleep(delay);
         (*funcs[0])();
         Sleep(delay);
-        for (int j = 1; j < funcs.size(); j++)
+        for (int j = 1; j < (int)funcs.size(); j++)
             (*funcs[j])();
     }
 }
