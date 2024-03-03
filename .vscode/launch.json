@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "C/C++: g++.exe build and debug project",
+            "name": "Build and debug project",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/main.exe",
@@ -25,6 +25,32 @@
                 }
             ],
             "preLaunchTask": "C/C++: g++.exe build project"
+        },
+        {
+            "name": "Build and debug map editor",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/mapEditor.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "C/C++: g++.exe build map editor"
         }
     ],
     "version": "2.0.0"

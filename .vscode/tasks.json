@@ -89,6 +89,32 @@
                 "$gcc"
             ],
             "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe build map editor",
+            "command": "C:\\MinGW\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-Wall",
+                "-Wextra",
+                "-g",
+                "${workspaceRoot}\\mapEditor.cpp",
+                "-lwinmm",
+                //"-std=gnu++11",
+                "-o",
+                "${workspaceRoot}\\mapEditor.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceRoot}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ],
     "version": "2.0.0"
