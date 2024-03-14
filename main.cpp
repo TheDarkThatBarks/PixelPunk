@@ -18,7 +18,7 @@ int main() {
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
-    std::ifstream m("map3.txt");
+    std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
