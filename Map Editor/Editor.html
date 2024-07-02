@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SquareRPG Level Editor</title>
+</head>
+
+<style>
+    #table {
+        margin-top: 30px;
+        margin-left: 30px;
+        outline: thick solid white;
+    }
+
+    .cell {
+        color: rgb(204, 204, 204);
+        background-color: rgb(12, 12, 12);
+        caret-color: transparent;
+        font-family: 'Consolas';
+        letter-spacing: 0.001px;
+        border: 0;
+        outline: 0;
+        text-align: center;
+        font-size: 80px;
+        width: 40px;
+        height: 80px;
+    }
+
+    label {
+        color: white;
+    }
+</style>
+
+<script>
+    const colors = ["rgb(12, 12, 12)", "rgb(0, 55, 218)", "rgb(19, 161, 14)", "rgb(58, 150, 221)",
+                    "rgb(197, 15, 31)", "rgb(136, 23, 152)", "rgb(193, 156, 0)", "rgb(204, 204, 204)",
+                    "rgb(118, 118, 118)", "rgb(59, 120, 255)", "rgb(22, 198, 12)", "rgb(97, 214, 214)",
+                    "rgb(231, 72, 86)", "rgb(180, 0, 158)", "rgb(249, 241, 165)", "rgb(242, 242, 242)"];
+    const BLACK = colors[0];
+    const WHITE = colors[15];
+
+    let width = 0;
+    let height = 0;
+
+    let cursorRow = 0;
+    let cursorCol = 0;
+
+    let frame1 = "";
+    let frame2 = "";
+    let curFrame = 1;
+
+    const setCursorPos = function (r, c) {
+        document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
+        cursorRow = r;
+        cursorCol = c;
+        const cell = document.querySelector(`#r${r}c${c}`);
+        document.querySelector("#fore-color").value = cell.dataset.forecolor;
+        document.querySelector("#back-color").value = cell.dataset.backcolor;
+        cell.parentElement.style.outline = "2px solid " + WHITE;
+        document.querySelector(`#r${r}c${c}`).focus();
+    };
+    
+    document.addEventListener("keydown", (event) => {
+        let arrow = true;
+        let rowChange = 0;
+        let colChange = 0;
+        switch (event.key) {
+            case "ArrowUp":
+                rowChange = cursorRow === 0 ? 0 : -1;
+                break;
+            case "ArrowDown":
+                rowChange = cursorRow === height - 1 ? 0 : 1;
+                break;
+            case "ArrowLeft":
+                colChange = cursorCol === 0 ? 0 : -1;
+                break;
+            case "ArrowRight":
+                colChange = cursorCol === width - 1 ? 0 : 1;
+                break;
+            default:
+                arrow = false;
+        }
+        if (arrow) {
+            event.preventDefault();
+            setCursorPos(cursorRow + rowChange, cursorCol + colChange);
+        }
+    });
+
+    const createTable = function () {
+        width = document.querySelector("#width").value * 2;
+        height = document.querySelector("#height").value;
+        const table = document.querySelector("#table");
+        table.hidden = false;
+        table.innerHTML = "";
+        for (let i = 0; i < height; i++) {
+            let str = "<tr>";
+            for (let j = 0; j < width; j++)
+                str += `<td width=40px height=80px>
+                            <input data-forecolor="7" data-backcolor="0" maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});">
+                        </td>`;
+            table.innerHTML += str + "</tr>";
+        }
+        frame1 = stringify();
+        frame2 = stringify();
+    };
+
+    const changeCellForeColor = function () {
+        const color = document.querySelector("#fore-color").value;
+        const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
+        cell.style.color = colors[color];
+        cell.dataset.forecolor = color;
+    };
+
+    const changeCellBackColor = function () {
+        const color = document.querySelector("#back-color").value;
+        const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
+        cell.style.backgroundColor = colors[color];
+        cell.dataset.backcolor = color;
+    };
+
+    let grid = false;
+
+    const toggleGrid = function () {
+        if (grid) {
+            grid = false;
+            document.querySelector("#table").border = "0";
+        } else {
+            grid = true;
+            document.querySelector("#table").border = "1px solid " + WHITE;
+        }
+    };
+
+    const stringify = function () {
+        let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                const cell = document.querySelector(`#r${i}c${j}`);
+                str += `.${cell.value || " "}${parseInt(cell.dataset.forecolor).toString(16)}${parseInt(cell.dataset.backcolor).toString(16)}`;
+            }
+        }
+        console.log(str);
+        return str;
+    };
+
+    const save = function () {
+        if (curFrame === 1) {
+            frame1 = stringify();
+        } else {
+            frame2 = stringify();
+        }
+        let str = frame1.slice(0, 5);
+        let idx = 5;
+        while (idx < frame1.length) {
+            const cell1 = frame1.slice(idx, idx + 4);
+            const cell2 = frame2.slice(idx, idx + 4);
+            str += cell1;
+            if (cell1 !== cell2)
+                str += '*' + cell2.slice(1);
+            idx += 4;
+        }
+        document.querySelector("#map").value = str;
+        navigator.clipboard.writeText(str);
+    };
+
+    const load = function () {
+        let map = document.querySelector("#map").value;
+        height = parseInt(map.slice(0, 2));
+        width = parseInt(map.slice(3, 5));
+
+        frame1 = map.slice(0, 5);
+        frame2 = map.slice(0, 5);
+        let idx = 5;
+        let lastCell = "";
+        while (idx < map.length) {
+            const cell = map.slice(idx, idx + 4);
+            if (cell[0] == '.') {
+                frame1 += cell;
+                if (lastCell != "" && lastCell[0] != '*')
+                    frame2 += '.' + lastCell.slice(1);
+            } else {
+                frame2 += '.' + cell.slice(1);
+            }
+            lastCell = cell;
+            idx += 4;
+        }
+        if (lastCell != "" && lastCell[0] != '*')
+            frame2 += '.' + lastCell.slice(1);
+        console.log(frame1);
+        console.log(frame2);
+        map = curFrame === 1 ? frame1 : frame2;
+
+        const table = document.querySelector("#table");
+        table.hidden = false;
+        table.innerHTML = "";
+        idx = 5;
+        for (let i = 0; i < height; i++) {
+            let str = "<tr>";
+            for (let j = 0; j < width; j++, idx += 4) {
+                const cellData = map.slice(idx + 1, idx + 4);
+                str += `<td width=40px height=80px>
+                            <input
+                                value="${cellData[0] === " " ? "" : cellData[0]}"
+                                style="color: ${colors[parseInt(cellData[1], 16)]};
+                                       background-color: ${colors[parseInt(cellData[2], 16)]};"
+                                data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
+                                maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});"
+                            >
+                        </td>`;
+            }
+            table.innerHTML += str + "</tr>";
+        }
+    };
+
+    const loadFrame = function (map) {
+        //let map = document.querySelector("#map").value;
+        height = parseInt(map.slice(0, 2));
+        width = parseInt(map.slice(3, 5));
+        const table = document.querySelector("#table");
+        table.hidden = false;
+        table.innerHTML = "";
+        let idx = 5;
+        for (let i = 0; i < height; i++) {
+            let str = "<tr>";
+            for (let j = 0; j < width; j++, idx += 4) {
+                const cellData = map.slice(idx + 1, idx + 4);
+                str += `<td width=40px height=80px>
+                            <input
+                                value="${cellData[0] === " " ? "" : cellData[0]}"
+                                style="color: ${colors[parseInt(cellData[1], 16)]};
+                                       background-color: ${colors[parseInt(cellData[2], 16)]};"
+                                data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
+                                maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});"
+                            >
+                        </td>`;
+            }
+            table.innerHTML += str + "</tr>";
+        }
+    };
+
+    const changeFrame = function (frame) {
+        if (frame === 1) {
+            frame2 = stringify();
+            loadFrame(frame1);
+        } else {
+            frame1 = stringify();
+            loadFrame(frame2);
+        }
+        curFrame = frame;
+    };
+</script>
+
+<body style="background-color: rgb(12, 12, 12)">
+    <input placeholder="Width" id="width">
+    <input placeholder="Height" id="height">
+    <button onclick="createTable();">Generate Table</button>
+    <select id="fore-color" onchange="changeCellForeColor();">
+        <option value="0">Black</option>
+        <option value="1">Dark Blue</option>
+        <option value="2">Green</option>
+        <option value="3">Light Blue</option>
+        <option value="4">Red</option>
+        <option value="5">Purple</option>
+        <option value="6">Yellow</option>
+        <option value="7">Light Gray</option>
+        <option value="8">Dark Gray</option>
+        <option value="9">Blue</option>
+        <option value="10">Light Green</option>
+        <option value="11">Lightest Blue</option>
+        <option value="12">Light Red</option>
+        <option value="13">Light Purple</option>
+        <option value="14">Light Yellow</option>
+        <option value="15">White</option>
+    </select>
+    <select id="back-color" onchange="changeCellBackColor();">
+        <option value="0">Black</option>
+        <option value="1">Dark Blue</option>
+        <option value="2">Green</option>
+        <option value="3">Light Blue</option>
+        <option value="4">Red</option>
+        <option value="5">Purple</option>
+        <option value="6">Yellow</option>
+        <option value="7">Light Gray</option>
+        <option value="8">Dark Gray</option>
+        <option value="9">Blue</option>
+        <option value="10">Light Green</option>
+        <option value="11">Lightest Blue</option>
+        <option value="12">Light Red</option>
+        <option value="13">Light Purple</option>
+        <option value="14">Light Yellow</option>
+        <option value="15">White</option>
+    </select>
+    <input type="checkbox" id="grid" onclick="toggleGrid()">
+    
+    <input type="radio" name="frame" value="1" onclick="changeFrame(1)" checked="true">
+    <label>Frame 1</label>
+    <input type="radio" name="frame" value="2" onclick="changeFrame(2)">
+    <label>Frame 2</label>
+    <input type="checkbox" id="play" onclick="play()">
+
+    <button onclick="save()">Save</button>
+    <button onclick="load()">Load</button>
+    <textarea id="map"></textarea>
+    <table id="table" cellspacing=0 cellpadding="0" hidden></table>
+</body>
+
+</html>
