@@ -10,6 +10,9 @@
         margin-top: 30px;
         margin-left: 30px;
         outline: thick solid white;
+        /*border: 1px solid white;
+        border-style: none;*/
+        border-collapse: collapse;
     }
 
     .cell {
@@ -45,9 +48,11 @@
     let cursorRow = 0;
     let cursorCol = 0;
 
-    let frame1 = "";
-    let frame2 = "";
+    let frame1Str = "";
+    let frame2Str = "";
     let curFrame = 1;
+
+    let frames = [[], []];
 
     const setCursorPos = function (r, c) {
         document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
@@ -57,7 +62,9 @@
         document.querySelector("#fore-color").value = cell.dataset.forecolor;
         document.querySelector("#back-color").value = cell.dataset.backcolor;
         cell.parentElement.style.outline = "2px solid " + WHITE;
-        document.querySelector(`#r${r}c${c}`).focus();
+        cell.focus();
+        setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
+        document.querySelector("#player").checked = (cell.dataset.isplayer != 0);
     };
     
     document.addEventListener("keydown", (event) => {
@@ -92,16 +99,40 @@
         const table = document.querySelector("#table");
         table.hidden = false;
         table.innerHTML = "";
+        frames = [[], []];
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
-            for (let j = 0; j < width; j++)
+            frames[0].push([]);
+            frames[1].push([]);
+            for (let j = 0; j < width; j++) {
                 str += `<td width=40px height=80px>
-                            <input data-forecolor="7" data-backcolor="0" maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});">
+                            <input
+                                data-forecolor="7" data-backcolor="0" data-isplayer="0"
+                                maxlength=1 class="cell" id="r${i}c${j}"
+                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
+                            >
                         </td>`;
+                frames[0][i].push({
+                    value: "",
+                    fore: 7,
+                    back: 0
+                });
+                frames[1][i].push({
+                    value: "",
+                    fore: 7,
+                    back: 0
+                });
+            }
             table.innerHTML += str + "</tr>";
         }
-        frame1 = stringify();
-        frame2 = stringify();
+        frame1Str = stringify();
+        frame2Str = stringify();
+        console.log(frames);
+    };
+
+    const changeVal = function (r, c) {
+        frames[curFrame - 1][r][c].value = document.querySelector(`#r${r}c${c}`).value;
+        console.log("changeVal", frames);
     };
 
     const changeCellForeColor = function () {
@@ -109,6 +140,8 @@
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.color = colors[color];
         cell.dataset.forecolor = color;
+        frames[curFrame - 1][cursorRow][cursorCol].fore = parseInt(color);
+        console.log(frames);
     };
 
     const changeCellBackColor = function () {
@@ -116,18 +149,15 @@
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.backgroundColor = colors[color];
         cell.dataset.backcolor = color;
+        frames[curFrame - 1][cursorRow][cursorCol].back = parseInt(color);
+        console.log(frames);
     };
 
     let grid = false;
 
     const toggleGrid = function () {
-        if (grid) {
-            grid = false;
-            document.querySelector("#table").border = "0";
-        } else {
-            grid = true;
-            document.querySelector("#table").border = "1px solid " + WHITE;
-        }
+        document.querySelector("#table").border = grid ? "0" : "1px solid white";
+        grid = !grid;
     };
 
     const stringify = function () {
@@ -142,17 +172,17 @@
         return str;
     };
 
-    const save = function () {
+    /*const save = function () {
         if (curFrame === 1) {
-            frame1 = stringify();
+            frame1Str = stringify();
         } else {
-            frame2 = stringify();
+            frame2Str = stringify();
         }
-        let str = frame1.slice(0, 5);
+        let str = frame1Str.slice(0, 5);
         let idx = 5;
-        while (idx < frame1.length) {
-            const cell1 = frame1.slice(idx, idx + 4);
-            const cell2 = frame2.slice(idx, idx + 4);
+        while (idx < frame1Str.length) {
+            const cell1 = frame1Str.slice(idx, idx + 4);
+            const cell2 = frame2Str.slice(idx, idx + 4);
             str += cell1;
             if (cell1 !== cell2)
                 str += '*' + cell2.slice(1);
@@ -160,34 +190,55 @@
         }
         document.querySelector("#map").value = str;
         navigator.clipboard.writeText(str);
+    };*/
+
+    const save = function () {
+        let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                let cells = [];
+                for (const frame of frames)
+                    cells.push((frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
+                str += '.' + cells[0];
+                if (cells[0] !== cells[1])
+                    str += '*' + cells[1];
+            }
+        }
+        document.querySelector("#map").value = str;
+        navigator.clipboard.writeText(str);
     };
 
-    const load = function () {
-        let map = document.querySelector("#map").value;
+    const load = function (frame) {
+        let map = 0;
+        let idx = 5;
+        if (frame === 0) {
+            map = document.querySelector("#map").value;
+            frame1Str = map.slice(0, 5);
+            frame2Str = map.slice(0, 5);
+            idx = 5;
+            let lastCell = "";
+            while (idx < map.length) {
+                const cell = map.slice(idx, idx + 4);
+                if (cell[0] === '.') {
+                    frame1Str += cell;
+                    if (lastCell !== "" && lastCell[0] !== '*')
+                        frame2Str += '.' + lastCell.slice(1);
+                } else {
+                    frame2Str += '.' + cell.slice(1);
+                }
+                lastCell = cell;
+                idx += 4;
+            }
+            if (lastCell !== "" && lastCell[0] !== '*')
+                frame2Str += '.' + lastCell.slice(1);
+            //console.log(frame1Str);
+            //console.log(frame2Str);
+            map = curFrame === 1 ? frame1Str : frame2Str;
+        } else {
+            map = frame;
+        }
         height = parseInt(map.slice(0, 2));
         width = parseInt(map.slice(3, 5));
-
-        frame1 = map.slice(0, 5);
-        frame2 = map.slice(0, 5);
-        let idx = 5;
-        let lastCell = "";
-        while (idx < map.length) {
-            const cell = map.slice(idx, idx + 4);
-            if (cell[0] == '.') {
-                frame1 += cell;
-                if (lastCell != "" && lastCell[0] != '*')
-                    frame2 += '.' + lastCell.slice(1);
-            } else {
-                frame2 += '.' + cell.slice(1);
-            }
-            lastCell = cell;
-            idx += 4;
-        }
-        if (lastCell != "" && lastCell[0] != '*')
-            frame2 += '.' + lastCell.slice(1);
-        console.log(frame1);
-        console.log(frame2);
-        map = curFrame === 1 ? frame1 : frame2;
 
         const table = document.querySelector("#table");
         table.hidden = false;
@@ -203,7 +254,8 @@
                                 style="color: ${colors[parseInt(cellData[1], 16)]};
                                        background-color: ${colors[parseInt(cellData[2], 16)]};"
                                 data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
-                                maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});"
+                                maxlength=1 class="cell" id="r${i}c${j}"
+                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
                         </td>`;
             }
@@ -211,14 +263,42 @@
         }
     };
 
-    const loadFrame = function (map) {
-        //let map = document.querySelector("#map").value;
+    /*const load = function (frame) {
+        let map = 0;
+        let idx = 5;
+        if (frame === 0) {
+            map = document.querySelector("#map").value;
+            frame1Str = map.slice(0, 5);
+            frame2Str = map.slice(0, 5);
+            idx = 5;
+            let lastCell = "";
+            while (idx < map.length) {
+                const cell = map.slice(idx, idx + 4);
+                if (cell[0] === '.') {
+                    frame1Str += cell;
+                    if (lastCell !== "" && lastCell[0] !== '*')
+                        frame2Str += '.' + lastCell.slice(1);
+                } else {
+                    frame2Str += '.' + cell.slice(1);
+                }
+                lastCell = cell;
+                idx += 4;
+            }
+            if (lastCell !== "" && lastCell[0] !== '*')
+                frame2Str += '.' + lastCell.slice(1);
+            //console.log(frame1Str);
+            //console.log(frame2Str);
+            map = curFrame === 1 ? frame1Str : frame2Str;
+        } else {
+            map = frame;
+        }
         height = parseInt(map.slice(0, 2));
         width = parseInt(map.slice(3, 5));
+
         const table = document.querySelector("#table");
         table.hidden = false;
         table.innerHTML = "";
-        let idx = 5;
+        idx = 5;
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
             for (let j = 0; j < width; j++, idx += 4) {
@@ -229,30 +309,56 @@
                                 style="color: ${colors[parseInt(cellData[1], 16)]};
                                        background-color: ${colors[parseInt(cellData[2], 16)]};"
                                 data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
-                                maxlength=1 class="cell" id="r${i}c${j}" onfocus="setCursorPos(${i}, ${j});"
+                                maxlength=1 class="cell" id="r${i}c${j}"
+                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
                         </td>`;
             }
             table.innerHTML += str + "</tr>";
         }
-    };
+    };*/
 
     const changeFrame = function (frame) {
         if (frame === 1) {
-            frame2 = stringify();
-            loadFrame(frame1);
+            frame2Str = stringify();
+            load(frame1Str);
         } else {
-            frame1 = stringify();
-            loadFrame(frame2);
+            frame1Str = stringify();
+            load(frame2Str);
         }
         curFrame = frame;
     };
+
+    let playing = false;
+    let playInterval;
+
+    const play = function () {
+        if (playing) {
+            clearInterval(playInterval);
+            playing = false;
+        } else {
+            playInterval = setInterval(() => {
+                changeFrame(-curFrame + 3);
+                document.querySelector(`#frame${curFrame}`).checked = true;
+            }, 500);
+            playing = true;
+        }
+    };
+
+    const setPlayer = function () {
+        const val = document.querySelector("#player").checked ? "1" : "0";
+        document.querySelector(`#r${cursorRow}c${Math.floor(cursorCol / 2) * 2}`).dataset.isplayer = val;
+        document.querySelector(`#r${cursorRow}c${(Math.floor(cursorCol / 2) * 2) + 1}`).dataset.isplayer = val;
+    };
+
 </script>
 
 <body style="background-color: rgb(12, 12, 12)">
     <input placeholder="Width" id="width">
     <input placeholder="Height" id="height">
     <button onclick="createTable();">Generate Table</button>
+    <input type="checkbox" id="grid" onclick="toggleGrid()">
+    <br>
     <select id="fore-color" onchange="changeCellForeColor();">
         <option value="0">Black</option>
         <option value="1">Dark Blue</option>
@@ -289,17 +395,22 @@
         <option value="14">Light Yellow</option>
         <option value="15">White</option>
     </select>
-    <input type="checkbox" id="grid" onclick="toggleGrid()">
     
-    <input type="radio" name="frame" value="1" onclick="changeFrame(1)" checked="true">
+    <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(1)" checked="true">
     <label>Frame 1</label>
-    <input type="radio" name="frame" value="2" onclick="changeFrame(2)">
+    <input type="radio" name="frame" id="frame2" value="2" onclick="changeFrame(2)">
     <label>Frame 2</label>
     <input type="checkbox" id="play" onclick="play()">
-
+    <br>
     <button onclick="save()">Save</button>
-    <button onclick="load()">Load</button>
+    <button onclick="load(0)">Load</button>
     <textarea id="map"></textarea>
+    <br>
+    <input type="checkbox" id="player" onclick="setPlayer()">
+    <label>Player</label>
+    <input type="checkbox" id="npc">
+    <label>NPC</label>
+    <br>
     <table id="table" cellspacing=0 cellpadding="0" hidden></table>
 </body>
 
