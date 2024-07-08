@@ -112,7 +112,7 @@
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
                         </td>`;
-                frames[0][i].push({
+                /*frames[0][i].push({
                     value: "",
                     fore: 7,
                     back: 0
@@ -121,7 +121,14 @@
                     value: "",
                     fore: 7,
                     back: 0
-                });
+                });*/
+                for (frame of frames)
+                    frame[i].push({
+                        value: "",
+                        fore: 7,
+                        back: 0,
+                        isPlayer: false
+                    });
             }
             table.innerHTML += str + "</tr>";
         }
@@ -172,34 +179,19 @@
         return str;
     };
 
-    /*const save = function () {
-        if (curFrame === 1) {
-            frame1Str = stringify();
-        } else {
-            frame2Str = stringify();
-        }
-        let str = frame1Str.slice(0, 5);
-        let idx = 5;
-        while (idx < frame1Str.length) {
-            const cell1 = frame1Str.slice(idx, idx + 4);
-            const cell2 = frame2Str.slice(idx, idx + 4);
-            str += cell1;
-            if (cell1 !== cell2)
-                str += '*' + cell2.slice(1);
-            idx += 4;
-        }
-        document.querySelector("#map").value = str;
-        navigator.clipboard.writeText(str);
-    };*/
-
     const save = function () {
         let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
         for (let i = 0; i < height; i++) {
+            str += '|';
             for (let j = 0; j < width; j++) {
                 let cells = [];
-                for (const frame of frames)
+                let player = false;
+                for (const frame of frames) {
                     cells.push((frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
-                str += '.' + cells[0];
+                    player |= frame[i][j].isPlayer;
+                }
+                str += (player ? '+' : '.') + cells[0];
+                //str += '.' + cells[0];
                 if (cells[0] !== cells[1])
                     str += '*' + cells[1];
             }
@@ -209,51 +201,72 @@
     };
 
     const load = function (frame) {
-        let map = 0;
-        let idx = 5;
-        if (frame === 0) {
-            map = document.querySelector("#map").value;
-            frame1Str = map.slice(0, 5);
-            frame2Str = map.slice(0, 5);
-            idx = 5;
+        if (frame === -1) {
+            let map = document.querySelector("#map").value;
+            height = parseInt(map.slice(0, 2));
+            width = parseInt(map.slice(3, 5));
+            let idx = 6, r = 0, c = 0;
             let lastCell = "";
-            while (idx < map.length) {
-                const cell = map.slice(idx, idx + 4);
-                if (cell[0] === '.') {
-                    frame1Str += cell;
-                    if (lastCell !== "" && lastCell[0] !== '*')
-                        frame2Str += '.' + lastCell.slice(1);
-                } else {
-                    frame2Str += '.' + cell.slice(1);
-                }
-                lastCell = cell;
-                idx += 4;
+            frames = [[], []];
+            for (let i = 0; i < height; i++) {
+                frames[0].push([]);
+                frames[1].push([]);
             }
-            if (lastCell !== "" && lastCell[0] !== '*')
-                frame2Str += '.' + lastCell.slice(1);
-            //console.log(frame1Str);
-            //console.log(frame2Str);
-            map = curFrame === 1 ? frame1Str : frame2Str;
-        } else {
-            map = frame;
+            //console.log(JSON.parse(JSON.stringify(frames)));
+            while (idx < map.length) {
+                const type = map[idx];
+                if (type === '|') {
+                    //console.log('|');
+                    if (lastCell !== "" && lastCell.type !== '*')
+                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+                    idx++;
+                    r++;
+                    lastCell = "";
+                    continue;
+                }
+                const cellStr = map.slice(idx + 1, idx + 4);
+                const cell = {
+                    type: type,
+                    cell: {
+                        value: cellStr[0] === " " ? "" : cellStr[0],
+                        fore: parseInt(cellStr[1], 16),
+                        back: parseInt(cellStr[2], 16),
+                        isPlayer: type === '+'
+                    }
+                };
+                if (type === '.' || type === '+') {
+                    frames[0][r].push(JSON.parse(JSON.stringify(cell.cell)));
+                    if (lastCell !== "" && lastCell.type !== '*')
+                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+                } else {
+                    frames[1][r].push(JSON.parse(JSON.stringify(cell.cell)));
+                }
+                lastCell = JSON.parse(JSON.stringify(cell));
+                idx += 4;
+                //console.log(JSON.parse(JSON.stringify(frames)));
+            }
+            //console.log('|', c);
+            if (lastCell !== "" && lastCell.type !== '*')
+                frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+            cursorRow = 0;
+            cursorCol = 0;
         }
-        height = parseInt(map.slice(0, 2));
-        width = parseInt(map.slice(3, 5));
+        console.log("load", frames);
 
         const table = document.querySelector("#table");
         table.hidden = false;
         table.innerHTML = "";
-        idx = 5;
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
-            for (let j = 0; j < width; j++, idx += 4) {
-                const cellData = map.slice(idx + 1, idx + 4);
+            for (let j = 0; j < width; j++) {
+                const cell = frames[curFrame - 1][i][j];
+                //console.log(cell);
                 str += `<td width=40px height=80px>
                             <input
-                                value="${cellData[0] === " " ? "" : cellData[0]}"
-                                style="color: ${colors[parseInt(cellData[1], 16)]};
-                                       background-color: ${colors[parseInt(cellData[2], 16)]};"
-                                data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
+                                value="${cell.value}"
+                                style="color: ${colors[cell.fore]};
+                                       background-color: ${colors[cell.back]};"
+                                data-forecolor="${cell.fore}" data-backcolor="${cell.back}" data-isplayer="${cell.isPlayer ? "1" : "0"}"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -261,72 +274,12 @@
             }
             table.innerHTML += str + "</tr>";
         }
+        setCursorPos(cursorRow, cursorCol);
     };
 
-    /*const load = function (frame) {
-        let map = 0;
-        let idx = 5;
-        if (frame === 0) {
-            map = document.querySelector("#map").value;
-            frame1Str = map.slice(0, 5);
-            frame2Str = map.slice(0, 5);
-            idx = 5;
-            let lastCell = "";
-            while (idx < map.length) {
-                const cell = map.slice(idx, idx + 4);
-                if (cell[0] === '.') {
-                    frame1Str += cell;
-                    if (lastCell !== "" && lastCell[0] !== '*')
-                        frame2Str += '.' + lastCell.slice(1);
-                } else {
-                    frame2Str += '.' + cell.slice(1);
-                }
-                lastCell = cell;
-                idx += 4;
-            }
-            if (lastCell !== "" && lastCell[0] !== '*')
-                frame2Str += '.' + lastCell.slice(1);
-            //console.log(frame1Str);
-            //console.log(frame2Str);
-            map = curFrame === 1 ? frame1Str : frame2Str;
-        } else {
-            map = frame;
-        }
-        height = parseInt(map.slice(0, 2));
-        width = parseInt(map.slice(3, 5));
-
-        const table = document.querySelector("#table");
-        table.hidden = false;
-        table.innerHTML = "";
-        idx = 5;
-        for (let i = 0; i < height; i++) {
-            let str = "<tr>";
-            for (let j = 0; j < width; j++, idx += 4) {
-                const cellData = map.slice(idx + 1, idx + 4);
-                str += `<td width=40px height=80px>
-                            <input
-                                value="${cellData[0] === " " ? "" : cellData[0]}"
-                                style="color: ${colors[parseInt(cellData[1], 16)]};
-                                       background-color: ${colors[parseInt(cellData[2], 16)]};"
-                                data-forecolor="${parseInt(cellData[1], 16)}" data-backcolor="${parseInt(cellData[2], 16)}"
-                                maxlength=1 class="cell" id="r${i}c${j}"
-                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
-                            >
-                        </td>`;
-            }
-            table.innerHTML += str + "</tr>";
-        }
-    };*/
-
     const changeFrame = function (frame) {
-        if (frame === 1) {
-            frame2Str = stringify();
-            load(frame1Str);
-        } else {
-            frame1Str = stringify();
-            load(frame2Str);
-        }
         curFrame = frame;
+        load();
     };
 
     let playing = false;
@@ -347,8 +300,15 @@
 
     const setPlayer = function () {
         const val = document.querySelector("#player").checked ? "1" : "0";
-        document.querySelector(`#r${cursorRow}c${Math.floor(cursorCol / 2) * 2}`).dataset.isplayer = val;
-        document.querySelector(`#r${cursorRow}c${(Math.floor(cursorCol / 2) * 2) + 1}`).dataset.isplayer = val;
+        const col1 = Math.floor(cursorCol / 2) * 2;
+        const col2 = (Math.floor(cursorCol / 2) * 2) + 1;
+        document.querySelector(`#r${cursorRow}c${col1}`).dataset.isplayer = val;
+        document.querySelector(`#r${cursorRow}c${col2}`).dataset.isplayer = val;
+        for (frame of frames) {
+            frame[cursorRow][col1].isPlayer = (val === "1");
+            frame[cursorRow][col2].isPlayer = (val === "1");
+        }
+        console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
     };
 
 </script>
@@ -403,7 +363,7 @@
     <input type="checkbox" id="play" onclick="play()">
     <br>
     <button onclick="save()">Save</button>
-    <button onclick="load(0)">Load</button>
+    <button onclick="load(-1)">Load</button>
     <textarea id="map"></textarea>
     <br>
     <input type="checkbox" id="player" onclick="setPlayer()">
