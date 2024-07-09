@@ -48,9 +48,9 @@
     let cursorRow = 0;
     let cursorCol = 0;
 
-    let frame1Str = "";
-    let frame2Str = "";
     let curFrame = 1;
+
+    let curPlayer = [-1, -1];
 
     let frames = [[], []];
 
@@ -59,12 +59,13 @@
         cursorRow = r;
         cursorCol = c;
         const cell = document.querySelector(`#r${r}c${c}`);
-        document.querySelector("#fore-color").value = cell.dataset.forecolor;
-        document.querySelector("#back-color").value = cell.dataset.backcolor;
+        document.querySelector("#fore-color").value = frames[curFrame - 1][r][c].fore;
+        document.querySelector("#back-color").value = frames[curFrame - 1][r][c].back;
         cell.parentElement.style.outline = "2px solid " + WHITE;
         cell.focus();
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
-        document.querySelector("#player").checked = (cell.dataset.isplayer != 0);
+        document.querySelector("#player").checked = frames[curFrame - 1][r][c].isPlayer;
+        document.querySelector("#npc").checked = frames[curFrame - 1][r][c].isNPC;
     };
     
     document.addEventListener("keydown", (event) => {
@@ -107,39 +108,28 @@
             for (let j = 0; j < width; j++) {
                 str += `<td width=40px height=80px>
                             <input
-                                data-forecolor="7" data-backcolor="0" data-isplayer="0"
+                                data-forecolor="7" data-backcolor="0"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
                         </td>`;
-                /*frames[0][i].push({
-                    value: "",
-                    fore: 7,
-                    back: 0
-                });
-                frames[1][i].push({
-                    value: "",
-                    fore: 7,
-                    back: 0
-                });*/
                 for (frame of frames)
                     frame[i].push({
                         value: "",
                         fore: 7,
                         back: 0,
-                        isPlayer: false
+                        isPlayer: false,
+                        isNPC: false
                     });
             }
             table.innerHTML += str + "</tr>";
         }
-        frame1Str = stringify();
-        frame2Str = stringify();
         console.log(frames);
     };
 
     const changeVal = function (r, c) {
         frames[curFrame - 1][r][c].value = document.querySelector(`#r${r}c${c}`).value;
-        console.log("changeVal", frames);
+        //console.log("changeVal", frames);
     };
 
     const changeCellForeColor = function () {
@@ -148,7 +138,7 @@
         cell.style.color = colors[color];
         cell.dataset.forecolor = color;
         frames[curFrame - 1][cursorRow][cursorCol].fore = parseInt(color);
-        console.log(frames);
+        //console.log(frames);
     };
 
     const changeCellBackColor = function () {
@@ -157,7 +147,7 @@
         cell.style.backgroundColor = colors[color];
         cell.dataset.backcolor = color;
         frames[curFrame - 1][cursorRow][cursorCol].back = parseInt(color);
-        console.log(frames);
+        //console.log(frames);
     };
 
     let grid = false;
@@ -167,18 +157,6 @@
         grid = !grid;
     };
 
-    const stringify = function () {
-        let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
-        for (let i = 0; i < height; i++) {
-            for (let j = 0; j < width; j++) {
-                const cell = document.querySelector(`#r${i}c${j}`);
-                str += `.${cell.value || " "}${parseInt(cell.dataset.forecolor).toString(16)}${parseInt(cell.dataset.backcolor).toString(16)}`;
-            }
-        }
-        console.log(str);
-        return str;
-    };
-
     const save = function () {
         let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
         for (let i = 0; i < height; i++) {
@@ -186,12 +164,13 @@
             for (let j = 0; j < width; j++) {
                 let cells = [];
                 let player = false;
+                let npc = false;
                 for (const frame of frames) {
                     cells.push((frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
                     player |= frame[i][j].isPlayer;
+                    npc |= frame[i][j].isNPC;
                 }
-                str += (player ? '+' : '.') + cells[0];
-                //str += '.' + cells[0];
+                str += (player ? '+' : npc ? '!' : '.') + cells[0];
                 if (cells[0] !== cells[1])
                     str += '*' + cells[1];
             }
@@ -231,15 +210,22 @@
                         value: cellStr[0] === " " ? "" : cellStr[0],
                         fore: parseInt(cellStr[1], 16),
                         back: parseInt(cellStr[2], 16),
-                        isPlayer: type === '+'
+                        isPlayer: type === '+',
+                        isNPC: type === '!'
                     }
                 };
-                if (type === '.' || type === '+') {
+                if (type === '*') {
+                    cell.cell.isPlayer = lastCell.cell.isPlayer;
+                    if (lastCell.cell.isNPC) {
+                        cell.cell.isNPC = lastCell.cell.isNPC;
+                        cell.cell.value = lastCell.cell.value;
+                        cell.cell.fore = lastCell.cell.fore;
+                    }
+                    frames[1][r].push(JSON.parse(JSON.stringify(cell.cell)));
+                } else {
                     frames[0][r].push(JSON.parse(JSON.stringify(cell.cell)));
                     if (lastCell !== "" && lastCell.type !== '*')
                         frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
-                } else {
-                    frames[1][r].push(JSON.parse(JSON.stringify(cell.cell)));
                 }
                 lastCell = JSON.parse(JSON.stringify(cell));
                 idx += 4;
@@ -261,12 +247,14 @@
             for (let j = 0; j < width; j++) {
                 const cell = frames[curFrame - 1][i][j];
                 //console.log(cell);
+                if (cell.isPlayer && curPlayer[0] === -1)
+                    curPlayer = [i, j];
                 str += `<td width=40px height=80px>
                             <input
                                 value="${cell.value}"
-                                style="color: ${colors[cell.fore]};
-                                       background-color: ${colors[cell.back]};"
-                                data-forecolor="${cell.fore}" data-backcolor="${cell.back}" data-isplayer="${cell.isPlayer ? "1" : "0"}"
+                                style="color: ${colors[cell.isPlayer ? 5 : cell.fore]};
+                                       background-color: ${colors[cell.isPlayer ? 5 : (cell.isNPC ? 9 : cell.back)]};"
+                                data-forecolor="${cell.fore}" data-backcolor="${cell.back}"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -298,17 +286,53 @@
         }
     };
 
-    const setPlayer = function () {
-        const val = document.querySelector("#player").checked ? "1" : "0";
-        const col1 = Math.floor(cursorCol / 2) * 2;
-        const col2 = (Math.floor(cursorCol / 2) * 2) + 1;
-        document.querySelector(`#r${cursorRow}c${col1}`).dataset.isplayer = val;
-        document.querySelector(`#r${cursorRow}c${col2}`).dataset.isplayer = val;
+    const setPlayer = function (checked) {
+        const col = Math.floor(cursorCol / 2) * 2;
         for (frame of frames) {
-            frame[cursorRow][col1].isPlayer = (val === "1");
-            frame[cursorRow][col2].isPlayer = (val === "1");
+            frame[cursorRow][col].isPlayer = checked;
+            frame[cursorRow][col + 1].isPlayer = checked;
         }
-        console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
+        //console.log(checked);
+        if (curPlayer[0] !== -1) {
+            //console.log("DEBUG");
+            for (frame of frames) {
+                frame[curPlayer[0]][curPlayer[1]].isPlayer = false;
+                frame[curPlayer[0]][curPlayer[1] + 1].isPlayer = false;
+            }
+            const cell1 = frames[curFrame - 1][curPlayer[0]][curPlayer[1]];
+            const cell2 = frames[curFrame - 1][curPlayer[0]][curPlayer[1] + 1];
+            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.color = colors[cell1.fore];
+            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.color = colors[cell2.fore];
+            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.backgroundColor = colors[cell2.back];
+        }
+        curPlayer = [-1, -1];
+        
+        if (checked) {
+            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[5];
+            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[5];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[5];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[5];
+            curPlayer = [cursorRow, col];
+        }
+        //console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
+    };
+
+    const setNPC = function (checked) {
+        const col = Math.floor(cursorCol / 2) * 2;
+        for (frame of frames) {
+            frame[cursorRow][col].isNPC = checked;
+            frame[cursorRow][col + 1].isNPC = checked;
+        }
+        if (checked) {
+            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[9];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[9];
+        } else {
+            const cell1 = frames[curFrame - 1][cursorRow][col];
+            const cell2 = frames[curFrame - 1][cursorRow][col + 1];
+            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
+        }
     };
 
 </script>
@@ -366,9 +390,9 @@
     <button onclick="load(-1)">Load</button>
     <textarea id="map"></textarea>
     <br>
-    <input type="checkbox" id="player" onclick="setPlayer()">
+    <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
     <label>Player</label>
-    <input type="checkbox" id="npc">
+    <input type="checkbox" id="npc" onclick="setNPC(this.checked)">
     <label>NPC</label>
     <br>
     <table id="table" cellspacing=0 cellpadding="0" hidden></table>
