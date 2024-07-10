@@ -274,15 +274,18 @@
     let playInterval;
 
     const play = function () {
+        const button = document.querySelector("#play");
         if (playing) {
             clearInterval(playInterval);
             playing = false;
+            button.innerHTML = "Play";
         } else {
             playInterval = setInterval(() => {
                 changeFrame(-curFrame + 3);
                 document.querySelector(`#frame${curFrame}`).checked = true;
             }, 500);
             playing = true;
+            button.innerHTML = "Stop";
         }
     };
 
@@ -341,8 +344,17 @@
     <input placeholder="Width" id="width">
     <input placeholder="Height" id="height">
     <button onclick="createTable();">Generate Table</button>
+    <br><br>
+    <label for="grid">Toggle Grid</label>
     <input type="checkbox" id="grid" onclick="toggleGrid()">
-    <br>
+    <br><br>
+    <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(1)" checked="true">
+    <label>Frame 1</label>
+    <input type="radio" name="frame" id="frame2" value="2" onclick="changeFrame(2)">
+    <label>Frame 2</label>
+    <!--<input type="checkbox" id="play" onclick="play()">!-->
+    <button id="play" onclick="play()">Play</button>
+    <br><br>
     <select id="fore-color" onchange="changeCellForeColor();">
         <option value="0">Black</option>
         <option value="1">Dark Blue</option>
@@ -379,23 +391,17 @@
         <option value="14">Light Yellow</option>
         <option value="15">White</option>
     </select>
-    
-    <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(1)" checked="true">
-    <label>Frame 1</label>
-    <input type="radio" name="frame" id="frame2" value="2" onclick="changeFrame(2)">
-    <label>Frame 2</label>
-    <input type="checkbox" id="play" onclick="play()">
-    <br>
-    <button onclick="save()">Save</button>
-    <button onclick="load(-1)">Load</button>
-    <textarea id="map"></textarea>
-    <br>
+    <br><br>
     <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
     <label>Player</label>
     <input type="checkbox" id="npc" onclick="setNPC(this.checked)">
     <label>NPC</label>
-    <br>
-    <table id="table" cellspacing=0 cellpadding="0" hidden></table>
+    <br><br>
+    <button onclick="save()">Save</button>
+    <button onclick="load(-1)">Load</button>
+    <textarea id="map"></textarea>
+    <br><br>
+    <table id="table" cellspacing="0" cellpadding="0" hidden></table>
 </body>
 
 </html>
