@@ -48,7 +48,7 @@
     let cursorRow = 0;
     let cursorCol = 0;
 
-    let curFrame = 1;
+    let curFrame = 0;
 
     let curPlayer = [-1, -1];
 
@@ -59,13 +59,13 @@
         cursorRow = r;
         cursorCol = c;
         const cell = document.querySelector(`#r${r}c${c}`);
-        document.querySelector("#fore-color").value = frames[curFrame - 1][r][c].fore;
-        document.querySelector("#back-color").value = frames[curFrame - 1][r][c].back;
+        document.querySelector("#fore-color").value = frames[curFrame][r][c].fore;
+        document.querySelector("#back-color").value = frames[curFrame][r][c].back;
         cell.parentElement.style.outline = "2px solid " + WHITE;
         cell.focus();
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
-        document.querySelector("#player").checked = frames[curFrame - 1][r][c].isPlayer;
-        document.querySelector("#npc").checked = frames[curFrame - 1][r][c].isNPC;
+        document.querySelector("#player").checked = frames[curFrame][r][c].isPlayer;
+        document.querySelector("#npc").checked = frames[curFrame][r][c].isNPC;
     };
     
     document.addEventListener("keydown", (event) => {
@@ -128,7 +128,7 @@
     };
 
     const changeVal = function (r, c) {
-        frames[curFrame - 1][r][c].value = document.querySelector(`#r${r}c${c}`).value;
+        frames[curFrame][r][c].value = document.querySelector(`#r${r}c${c}`).value;
         //console.log("changeVal", frames);
     };
 
@@ -137,7 +137,7 @@
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.color = colors[color];
         cell.dataset.forecolor = color;
-        frames[curFrame - 1][cursorRow][cursorCol].fore = parseInt(color);
+        frames[curFrame][cursorRow][cursorCol].fore = parseInt(color);
         //console.log(frames);
     };
 
@@ -146,7 +146,7 @@
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.backgroundColor = colors[color];
         cell.dataset.backcolor = color;
-        frames[curFrame - 1][cursorRow][cursorCol].back = parseInt(color);
+        frames[curFrame][cursorRow][cursorCol].back = parseInt(color);
         //console.log(frames);
     };
 
@@ -245,7 +245,7 @@
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
             for (let j = 0; j < width; j++) {
-                const cell = frames[curFrame - 1][i][j];
+                const cell = frames[curFrame][i][j];
                 //console.log(cell);
                 if (cell.isPlayer && curPlayer[0] === -1)
                     curPlayer = [i, j];
@@ -273,20 +273,25 @@
     let playing = false;
     let playInterval;
 
-    const play = function () {
-        const button = document.querySelector("#play");
+    const play = function (button) {
         if (playing) {
             clearInterval(playInterval);
             playing = false;
             button.innerHTML = "Play";
         } else {
             playInterval = setInterval(() => {
-                changeFrame(-curFrame + 3);
-                document.querySelector(`#frame${curFrame}`).checked = true;
+                changeFrame(-curFrame + 1);
+                document.querySelector(`#frame${curFrame + 1}`).checked = true;
             }, 500);
             playing = true;
             button.innerHTML = "Stop";
         }
+    };
+
+    const copyFrame = function () {
+        frames[-curFrame + 1] = JSON.parse(JSON.stringify(frames[curFrame]));
+        changeFrame(-curFrame + 1);
+        document.querySelector(`#frame${curFrame + 1}`).checked = true;
     };
 
     const setPlayer = function (checked) {
@@ -302,8 +307,8 @@
                 frame[curPlayer[0]][curPlayer[1]].isPlayer = false;
                 frame[curPlayer[0]][curPlayer[1] + 1].isPlayer = false;
             }
-            const cell1 = frames[curFrame - 1][curPlayer[0]][curPlayer[1]];
-            const cell2 = frames[curFrame - 1][curPlayer[0]][curPlayer[1] + 1];
+            const cell1 = frames[curFrame][curPlayer[0]][curPlayer[1]];
+            const cell2 = frames[curFrame][curPlayer[0]][curPlayer[1] + 1];
             document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.color = colors[cell1.fore];
             document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.backgroundColor = colors[cell1.back];
             document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.color = colors[cell2.fore];
@@ -331,8 +336,8 @@
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[9];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[9];
         } else {
-            const cell1 = frames[curFrame - 1][cursorRow][col];
-            const cell2 = frames[curFrame - 1][cursorRow][col + 1];
+            const cell1 = frames[curFrame][cursorRow][col];
+            const cell2 = frames[curFrame][cursorRow][col + 1];
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
         }
@@ -348,14 +353,14 @@
     <label for="grid">Toggle Grid</label>
     <input type="checkbox" id="grid" onclick="toggleGrid()">
     <br><br>
-    <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(1)" checked="true">
-    <label>Frame 1</label>
-    <input type="radio" name="frame" id="frame2" value="2" onclick="changeFrame(2)">
-    <label>Frame 2</label>
-    <!--<input type="checkbox" id="play" onclick="play()">!-->
-    <button id="play" onclick="play()">Play</button>
+    <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(0)" checked="true">
+    <label for="frame1">Frame 1</label>
+    <input type="radio" name="frame" id="frame2" value="2" onclick="changeFrame(1)">
+    <label for="frame2">Frame 2</label>
+    <button onclick="copyFrame()">Copy Frame</button>
+    <button onclick="play(this)">Play</button>
     <br><br>
-    <select id="fore-color" onchange="changeCellForeColor();">
+    <select id="fore-color" onchange="changeCellForeColor()">
         <option value="0">Black</option>
         <option value="1">Dark Blue</option>
         <option value="2">Green</option>
@@ -373,7 +378,7 @@
         <option value="14">Light Yellow</option>
         <option value="15">White</option>
     </select>
-    <select id="back-color" onchange="changeCellBackColor();">
+    <select id="back-color" onchange="changeCellBackColor()">
         <option value="0">Black</option>
         <option value="1">Dark Blue</option>
         <option value="2">Green</option>
@@ -393,9 +398,9 @@
     </select>
     <br><br>
     <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
-    <label>Player</label>
+    <label for="player">Player</label>
     <input type="checkbox" id="npc" onclick="setNPC(this.checked)">
-    <label>NPC</label>
+    <label for="npc">NPC</label>
     <br><br>
     <button onclick="save()">Save</button>
     <button onclick="load(-1)">Load</button>
