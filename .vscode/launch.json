@@ -30,7 +30,7 @@
             "name": "Build and debug map editor",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/mapEditor.exe",
+            "program": "${workspaceRoot}/MapEditor/mapEditor.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",

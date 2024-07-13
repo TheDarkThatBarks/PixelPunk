@@ -44,6 +44,7 @@ struct Node {
 void initMap(std::string map);
 void updateDisplay(int val, int oldR, int oldC, int newR, int newC);
 void changePos(int val, Pos* pos, int newR, int newC);
+void changePosPlayer(int newR, int newC);
 void keyPress();
 
 Node* nodeInit(int r, int c, int f, int g, Node* prev);

@@ -44,15 +44,13 @@
 
     let width = 0;
     let height = 0;
+    let frames = [[], []];
 
     let cursorRow = 0;
     let cursorCol = 0;
-
     let curFrame = 0;
-
     let curPlayer = [-1, -1];
-
-    let frames = [[], []];
+    let curStart = [-1, -1];
 
     const setCursorPos = function (r, c) {
         document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
@@ -66,6 +64,7 @@
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
         document.querySelector("#player").checked = frames[curFrame][r][c].isPlayer;
         document.querySelector("#npc").checked = frames[curFrame][r][c].isNPC;
+        document.querySelector("#start").checked = frames[curFrame][r][c].isStart;
     };
     
     document.addEventListener("keydown", (event) => {
@@ -108,7 +107,6 @@
             for (let j = 0; j < width; j++) {
                 str += `<td width=40px height=80px>
                             <input
-                                data-forecolor="7" data-backcolor="0"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -119,7 +117,8 @@
                         fore: 7,
                         back: 0,
                         isPlayer: false,
-                        isNPC: false
+                        isNPC: false,
+                        isStart: false
                     });
             }
             table.innerHTML += str + "</tr>";
@@ -136,7 +135,6 @@
         const color = document.querySelector("#fore-color").value;
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.color = colors[color];
-        cell.dataset.forecolor = color;
         frames[curFrame][cursorRow][cursorCol].fore = parseInt(color);
         //console.log(frames);
     };
@@ -145,7 +143,6 @@
         const color = document.querySelector("#back-color").value;
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.backgroundColor = colors[color];
-        cell.dataset.backcolor = color;
         frames[curFrame][cursorRow][cursorCol].back = parseInt(color);
         //console.log(frames);
     };
@@ -165,12 +162,14 @@
                 let cells = [];
                 let player = false;
                 let npc = false;
+                let start = false;
                 for (const frame of frames) {
                     cells.push((frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
                     player |= frame[i][j].isPlayer;
                     npc |= frame[i][j].isNPC;
+                    start |= frame[i][j].isStart;
                 }
-                str += (player ? '+' : npc ? '!' : '.') + cells[0];
+                str += (start ? '^' : "") + (player ? '+' : npc ? '!' : '.') + cells[0];
                 if (cells[0] !== cells[1])
                     str += '*' + cells[1];
             }
@@ -184,7 +183,7 @@
             let map = document.querySelector("#map").value;
             height = parseInt(map.slice(0, 2));
             width = parseInt(map.slice(3, 5));
-            let idx = 6, r = 0, c = 0;
+            let idx = 6, r = 0;
             let lastCell = "";
             frames = [[], []];
             for (let i = 0; i < height; i++) {
@@ -192,9 +191,14 @@
                 frames[1].push([]);
             }
             //console.log(JSON.parse(JSON.stringify(frames)));
+            let start = false;
             while (idx < map.length) {
                 const type = map[idx];
-                if (type === '|') {
+                if (type === '^') {
+                    start = true;
+                    idx++;
+                    continue;
+                } else if (type === '|') {
                     //console.log('|');
                     if (lastCell !== "" && lastCell.type !== '*')
                         frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
@@ -211,9 +215,11 @@
                         fore: parseInt(cellStr[1], 16),
                         back: parseInt(cellStr[2], 16),
                         isPlayer: type === '+',
-                        isNPC: type === '!'
+                        isNPC: type === '!',
+                        isStart: start
                     }
                 };
+                start = false;
                 if (type === '*') {
                     cell.cell.isPlayer = lastCell.cell.isPlayer;
                     if (lastCell.cell.isNPC) {
@@ -221,6 +227,7 @@
                         cell.cell.value = lastCell.cell.value;
                         cell.cell.fore = lastCell.cell.fore;
                     }
+                    cell.cell.isStart = lastCell.cell.isStart;
                     frames[1][r].push(JSON.parse(JSON.stringify(cell.cell)));
                 } else {
                     frames[0][r].push(JSON.parse(JSON.stringify(cell.cell)));
@@ -254,7 +261,6 @@
                                 value="${cell.value}"
                                 style="color: ${colors[cell.isPlayer ? 5 : cell.fore]};
                                        background-color: ${colors[cell.isPlayer ? 5 : (cell.isNPC ? 9 : cell.back)]};"
-                                data-forecolor="${cell.fore}" data-backcolor="${cell.back}"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -314,14 +320,14 @@
             document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.color = colors[cell2.fore];
             document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.backgroundColor = colors[cell2.back];
         }
-        curPlayer = [-1, -1];
-        
         if (checked) {
             document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[5];
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[5];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[5];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[5];
             curPlayer = [cursorRow, col];
+        } else {
+            curPlayer = [-1, -1];
         }
         //console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
     };
@@ -341,6 +347,19 @@
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
         }
+    };
+
+    const setStart = function (checked) {
+        const col = Math.floor(cursorCol / 2) * 2;
+        for (frame of frames) {
+            frame[cursorRow][col].isStart = checked;
+            frame[cursorRow][col + 1].isStart = checked;
+            if (curStart[0] !== -1) {
+                frame[curStart[0]][curStart[1]].isStart = false;
+                frame[curStart[0]][curStart[1] + 1].isStart = false;
+            }
+        }
+        curStart = checked ? [cursorRow, col] : [-1, -1];
     };
 
 </script>
@@ -401,6 +420,8 @@
     <label for="player">Player</label>
     <input type="checkbox" id="npc" onclick="setNPC(this.checked)">
     <label for="npc">NPC</label>
+    <input type="checkbox" id="start" onclick="setStart(this.checked)">
+    <label for="start">Screen Start</label>
     <br><br>
     <button onclick="save()">Save</button>
     <button onclick="load(-1)">Load</button>

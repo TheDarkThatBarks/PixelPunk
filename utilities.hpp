@@ -28,6 +28,16 @@ struct Pos {
     }
 };
 
+struct cell {
+    char value;
+    int fore;
+    int back;
+    bool isPlayer;
+    bool isNPC;
+    bool isStart;
+};
+
+extern std::vector<std::vector<cell>> frames[2];
 extern std::vector<std::vector<int>> mapCoord;
 extern std::vector<std::string> mapText;
 extern int textIndex;
@@ -40,5 +50,6 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
 void setCursor(short r, short c);
 void setColor(std::string background, std::string text);
 void setColor(int val);
+void setColor2(cell c);
 void reset();
 void removeScrollbar();

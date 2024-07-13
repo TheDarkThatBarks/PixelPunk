@@ -9,6 +9,7 @@ int windowHeight = ORIGINAL_WINDOW_HEIGHT;
 
 Pos screenPos;
 std::vector<std::vector<int>> mapCoord;
+std::vector<std::vector<cell>> frames[2];
 
 Pos screenToMap(Pos pos) {
     pos.r += screenPos.r;
@@ -68,6 +69,10 @@ void setColor(int val) {
         default:
             setColor("BLACK", "LIGHT_GRAY");
     }
+}
+
+void setColor2(cell c) {
+    SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : c.back) * 16) + (c.isPlayer ? 5 : c.fore));
 }
 
 void reset() {

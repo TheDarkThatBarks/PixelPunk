@@ -46,6 +46,20 @@ void loadAnimation() {
     changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
 }
 
+void printScreen2() {
+    printBox();
+    for (int r = 0; r < screenSize; r++) {
+        setCursor(rOffset + r, cOffset);
+        for (int c = 0; c < screenSize * 2; c++) {
+            Pos pos = screenToMap({r, c});
+            char val = frames[0][pos.r][pos.c].value;
+            setColor2(frames[0][pos.r][pos.c]);
+            printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
+        }
+    }
+    reset();
+}
+
 void printScreen() {
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);

@@ -30,6 +30,7 @@ extern std::string map;
 
 void loadAnimation();
 void printScreen();
+void printScreen2();
 void printBox();
 void printMapBasic();
 void clearScreen();
