@@ -24,9 +24,9 @@
         border: 0;
         outline: 0;
         text-align: center;
-        font-size: 80px;
+        /*font-size: 80px;
         width: 40px;
-        height: 80px;
+        height: 80px;*/
     }
 
     label {
@@ -42,6 +42,7 @@
     const BLACK = colors[0];
     const WHITE = colors[15];
 
+    let cellWidth = 20;
     let width = 0;
     let height = 0;
     let frames = [[], []];
@@ -106,8 +107,9 @@
             frames[0].push([]);
             frames[1].push([]);
             for (let j = 0; j < width; j++) {
-                str += `<td width=40px height=80px>
+                str += `<td width=${cellWidth}px height=${cellWidth * 2}px>
                             <input
+                                style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -260,10 +262,11 @@
                 //console.log(cell);
                 if (cell.isPlayer && curPlayer[0] === -1)
                     curPlayer = [i, j];
-                str += `<td width=40px height=80px>
+                str += `<td width=${cellWidth}px height=${cellWidth * 2}px>
                             <input
                                 value="${cell.value}"
-                                style="color: ${colors[cell.isPlayer ? 5 : cell.fore]};
+                                style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px;
+                                       color: ${colors[cell.isPlayer ? 5 : cell.fore]};
                                        background-color: ${colors[cell.isPlayer ? 5 : (cell.isNPC ? 9 : cell.back)]};"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
@@ -387,15 +390,21 @@
         console.log("changeType", frames);
     };
 
+    const changeCellSize = function (newWidth) {
+        cellWidth = newWidth;
+        load();
+    };
 </script>
 
 <body style="background-color: rgb(12, 12, 12)">
-    <input placeholder="Width" id="width">
-    <input placeholder="Height" id="height">
+    <input type="number" placeholder="Width" id="width">
+    <input type="number" placeholder="Height" id="height">
     <button onclick="createTable();">Generate Table</button>
     <br><br>
     <label for="grid">Toggle Grid</label>
-    <input type="checkbox" id="grid" onclick="toggleGrid()">
+    <input type="checkbox" id="grid" onchange="toggleGrid()">
+    <label for="size">Cell Width (Pixels)</label>
+    <input type="number" id="size" value="20" onchange="changeCellSize(this.value)">
     <br><br>
     <input type="radio" name="frame" id="frame1" value="1" onclick="changeFrame(0)" checked="true">
     <label for="frame1">Frame 1</label>
