@@ -7,7 +7,7 @@ int textIndex = 0;
 void initMap2(std::string map);
 
 int main() {
-    /*GetWindowRect(console, &r);
+    GetWindowRect(console, &r);
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
@@ -15,23 +15,23 @@ int main() {
     SetWindowLong(console, GWL_STYLE, style);
     SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_NOZORDER);
     removeScrollbar();
-    SetWindowTextW(console, L"Square RPG");*/
+    SetWindowTextW(console, L"Square RPG");
 
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("newMap2.txt");
+    std::ifstream m("map2.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
     std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
-    //initMap(map);
-    //loadAnimation();
-    initMap2(map);
-    printScreen2();
+    initMap(map);
+    loadAnimation();
+    /*initMap2(map);
+    printScreen2();*/
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
 }
@@ -318,9 +318,9 @@ void keyPress() {
                             cChange++;
                             break;
                     }
-                    //changePos(M_PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
-                    changePosPlayer(playerPos->r + rChange, playerPos->c + cChange * 2);
-                    //enemyAI();
+                    changePos(M_PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
+                    //changePosPlayer(playerPos->r + rChange, playerPos->c + cChange * 2);
+                    enemyAI();
                 } else if (kbCode == KB_SPACE) {
                     enemyAI();
                 } else if (kbCode == KB_TAB) {

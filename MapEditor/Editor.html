@@ -65,6 +65,7 @@
         document.querySelector("#player").checked = frames[curFrame][r][c].isPlayer;
         document.querySelector("#npc").checked = frames[curFrame][r][c].isNPC;
         document.querySelector("#start").checked = frames[curFrame][r][c].isStart;
+        document.querySelector("#type").value = frames[curFrame][r][c].type;
     };
     
     document.addEventListener("keydown", (event) => {
@@ -113,6 +114,7 @@
                         </td>`;
                 for (frame of frames)
                     frame[i].push({
+                        type: " ",
                         value: "",
                         fore: 7,
                         back: 0,
@@ -164,14 +166,14 @@
                 let npc = false;
                 let start = false;
                 for (const frame of frames) {
-                    cells.push((frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
+                    cells.push(frame[i][j].type + (frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
                     player |= frame[i][j].isPlayer;
                     npc |= frame[i][j].isNPC;
                     start |= frame[i][j].isStart;
                 }
-                str += (start ? '^' : "") + (player ? '+' : npc ? '!' : '.') + cells[0];
-                if (cells[0] !== cells[1])
-                    str += '*' + cells[1];
+                str += (start ? '^' : "") + cells[0];
+                if (cells[0].slice(1) !== cells[1].slice(1))
+                    str += '*' + cells[1].slice(1);
             }
         }
         document.querySelector("#map").value = str;
@@ -211,6 +213,7 @@
                 const cell = {
                     type: type,
                     cell: {
+                        type: type,
                         value: cellStr[0] === " " ? "" : cellStr[0],
                         fore: parseInt(cellStr[1], 16),
                         back: parseInt(cellStr[2], 16),
@@ -221,6 +224,7 @@
                 };
                 start = false;
                 if (type === '*') {
+                    cell.cell.type = lastCell.cell.type;
                     cell.cell.isPlayer = lastCell.cell.isPlayer;
                     if (lastCell.cell.isNPC) {
                         cell.cell.isNPC = lastCell.cell.isNPC;
@@ -362,6 +366,27 @@
         curStart = checked ? [cursorRow, col] : [-1, -1];
     };
 
+    const changeType = function () {
+        const col = Math.floor(cursorCol / 2) * 2;
+        const type = document.querySelector("#type").value;
+        const oldType = frames[curFrame][cursorRow][col].type;
+        if (oldType === "+") {
+            setPlayer(false);
+        } else if (oldType === "!") {
+            setNPC(false);
+        }
+        if (type === "+") {
+            setPlayer(true);
+        } else if (type === "!") {
+            setNPC(true);
+        }
+        for (const frame of frames) {
+            for (let i = 0; i < 2; i++)
+                frame[cursorRow][col + i].type = type;
+        }
+        console.log("changeType", frames);
+    };
+
 </script>
 
 <body style="background-color: rgb(12, 12, 12)">
@@ -414,6 +439,13 @@
         <option value="13">Light Purple</option>
         <option value="14">Light Yellow</option>
         <option value="15">White</option>
+    </select>
+    <select id="type" onchange="changeType()">
+        <option value=" ">Empty</option>
+        <option value=".">Wall</option>
+        <option value="-">Enemy</option>
+        <option value="!">NPC</option>
+        <option value="+">Player</option>
     </select>
     <br><br>
     <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
