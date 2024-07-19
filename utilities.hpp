@@ -29,10 +29,12 @@ struct Pos {
 };
 
 struct cell {
+    char type;
     char value;
     int fore;
     int back;
     bool isPlayer;
+    bool isEnemy;
     bool isNPC;
     bool isStart;
 };

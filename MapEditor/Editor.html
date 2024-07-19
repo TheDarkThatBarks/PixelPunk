@@ -121,6 +121,7 @@
                         fore: 7,
                         back: 0,
                         isPlayer: false,
+                        isEnemy: false,
                         isNPC: false,
                         isStart: false
                     });
@@ -159,19 +160,25 @@
     };
 
     const save = function () {
+        let foundPlayer = false;
+        let foundStart = false;
         let str = `${(height < 10 ? "0" : "") + height}x${(width < 10 ? "0" : "") + width}`;
         for (let i = 0; i < height; i++) {
             str += '|';
             for (let j = 0; j < width; j++) {
                 let cells = [];
                 let player = false;
+                let enemy = false;
                 let npc = false;
                 let start = false;
                 for (const frame of frames) {
                     cells.push(frame[i][j].type + (frame[i][j].value || " ") + frame[i][j].fore.toString(16) + frame[i][j].back.toString(16));
                     player |= frame[i][j].isPlayer;
+                    enemy != frame[i][j].isEnemy;
                     npc |= frame[i][j].isNPC;
                     start |= frame[i][j].isStart;
+                    foundPlayer |= player;
+                    foundStart |= start;
                 }
                 str += (start ? '^' : "") + cells[0];
                 if (cells[0].slice(1) !== cells[1].slice(1))
@@ -180,6 +187,10 @@
         }
         document.querySelector("#map").value = str;
         navigator.clipboard.writeText(str);
+        if (!foundPlayer)
+            alert("Warning: Player location not found!");
+        if (!foundStart)
+            alert("Warning: Screen start location not found!");
     };
 
     const load = function (frame) {
@@ -205,7 +216,7 @@
                 } else if (type === '|') {
                     //console.log('|');
                     if (lastCell !== "" && lastCell.type !== '*')
-                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell)));
                     idx++;
                     r++;
                     lastCell = "";
@@ -214,31 +225,30 @@
                 const cellStr = map.slice(idx + 1, idx + 4);
                 const cell = {
                     type: type,
-                    cell: {
-                        type: type,
-                        value: cellStr[0] === " " ? "" : cellStr[0],
-                        fore: parseInt(cellStr[1], 16),
-                        back: parseInt(cellStr[2], 16),
-                        isPlayer: type === '+',
-                        isNPC: type === '!',
-                        isStart: start
-                    }
+                    value: cellStr[0] === " " ? "" : cellStr[0],
+                    fore: parseInt(cellStr[1], 16),
+                    back: parseInt(cellStr[2], 16),
+                    isPlayer: type === '+',
+                    isEnemy: type === '-',
+                    isNPC: type === '!',
+                    isStart: start
                 };
                 start = false;
                 if (type === '*') {
-                    cell.cell.type = lastCell.cell.type;
-                    cell.cell.isPlayer = lastCell.cell.isPlayer;
-                    if (lastCell.cell.isNPC) {
-                        cell.cell.isNPC = lastCell.cell.isNPC;
-                        cell.cell.value = lastCell.cell.value;
-                        cell.cell.fore = lastCell.cell.fore;
+                    cell.type = lastCell.type;
+                    cell.isPlayer = lastCell.isPlayer;
+                    cell.isEnemy = lastCell.isEnemy;
+                    if (lastCell.isNPC) {
+                        cell.isNPC = lastCell.isNPC;
+                        cell.value = lastCell.value;
+                        cell.fore = lastCell.fore;
                     }
-                    cell.cell.isStart = lastCell.cell.isStart;
-                    frames[1][r].push(JSON.parse(JSON.stringify(cell.cell)));
+                    cell.isStart = lastCell.isStart;
+                    frames[1][r].push(JSON.parse(JSON.stringify(cell)));
                 } else {
-                    frames[0][r].push(JSON.parse(JSON.stringify(cell.cell)));
+                    frames[0][r].push(JSON.parse(JSON.stringify(cell)));
                     if (lastCell !== "" && lastCell.type !== '*')
-                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+                        frames[1][r].push(JSON.parse(JSON.stringify(lastCell)));
                 }
                 lastCell = JSON.parse(JSON.stringify(cell));
                 idx += 4;
@@ -246,7 +256,7 @@
             }
             //console.log('|', c);
             if (lastCell !== "" && lastCell.type !== '*')
-                frames[1][r].push(JSON.parse(JSON.stringify(lastCell.cell)));
+                frames[1][r].push(JSON.parse(JSON.stringify(lastCell)));
             cursorRow = 0;
             cursorCol = 0;
         }
@@ -266,8 +276,8 @@
                             <input
                                 value="${cell.value}"
                                 style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px;
-                                       color: ${colors[cell.isPlayer ? 5 : cell.fore]};
-                                       background-color: ${colors[cell.isPlayer ? 5 : (cell.isNPC ? 9 : cell.back)]};"
+                                       color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : cell.fore)]};
+                                       background-color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : (cell.isNPC ? 9 : cell.back))]};"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
@@ -339,6 +349,27 @@
         //console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
     };
 
+    const setEnemy = function (checked) {
+        const col = Math.floor(cursorCol / 2) * 2;
+        for (frame of frames) {
+            frame[cursorRow][col].isEnemy = checked;
+            frame[cursorRow][col + 1].isEnemy = checked;
+        }
+        if (checked) {
+            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[12];
+            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[12];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[12];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[12];
+        } else {
+            const cell1 = frames[curFrame][cursorRow][col];
+            const cell2 = frames[curFrame][cursorRow][col + 1];
+            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[cell1.fore];
+            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[cell2.fore];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
+        }
+    };
+
     const setNPC = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
         for (frame of frames) {
@@ -377,11 +408,15 @@
             setPlayer(false);
         } else if (oldType === "!") {
             setNPC(false);
+        } else if (oldType === "-") {
+            setEnemy(false);
         }
         if (type === "+") {
             setPlayer(true);
         } else if (type === "!") {
             setNPC(true);
+        } else if (type === "-") {
+            setEnemy(true);
         }
         for (const frame of frames) {
             for (let i = 0; i < 2; i++)

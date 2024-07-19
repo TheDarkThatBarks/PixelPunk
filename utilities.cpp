@@ -72,7 +72,7 @@ void setColor(int val) {
 }
 
 void setColor2(cell c) {
-    SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : c.back) * 16) + (c.isPlayer ? 5 : c.fore));
+    SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : c.back)) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
 }
 
 void reset() {

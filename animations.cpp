@@ -52,6 +52,7 @@ void printScreen2() {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
             Pos pos = screenToMap({r, c});
+            //printf("%i,%i,%i,%i,%i,%i\n", screenPos.r, screenPos.c, r, c, pos.r, pos.c);
             char val = frames[0][pos.r][pos.c].value;
             setColor2(frames[0][pos.r][pos.c]);
             printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
