@@ -28,6 +28,8 @@ extern std::string currentDialogue;
 
 extern std::string map;
 
+extern int currFrame;
+
 void loadAnimation();
 void printScreen();
 void printScreen2();

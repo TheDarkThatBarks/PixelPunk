@@ -28,7 +28,7 @@ struct Pos {
     }
 };
 
-struct cell {
+struct Cell {
     char type;
     char value;
     int fore;
@@ -39,7 +39,7 @@ struct cell {
     bool isStart;
 };
 
-extern std::vector<std::vector<cell>> frames[2];
+extern std::vector<std::vector<Cell>> frames[2];
 extern std::vector<std::vector<int>> mapCoord;
 extern std::vector<std::string> mapText;
 extern int textIndex;
@@ -52,6 +52,6 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
 void setCursor(short r, short c);
 void setColor(std::string background, std::string text);
 void setColor(int val);
-void setColor2(cell c);
+void setColor2(Cell c);
 void reset();
 void removeScrollbar();

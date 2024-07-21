@@ -9,7 +9,7 @@ int windowHeight = ORIGINAL_WINDOW_HEIGHT;
 
 Pos screenPos;
 std::vector<std::vector<int>> mapCoord;
-std::vector<std::vector<cell>> frames[2];
+std::vector<std::vector<Cell>> frames[2];
 
 Pos screenToMap(Pos pos) {
     pos.r += screenPos.r;
@@ -71,8 +71,8 @@ void setColor(int val) {
     }
 }
 
-void setColor2(cell c) {
-    SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : c.back)) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
+void setColor2(Cell c) {
+    SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
 }
 
 void reset() {

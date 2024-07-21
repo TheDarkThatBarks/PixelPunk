@@ -4,10 +4,8 @@ std::string map;
 std::vector<std::string> mapText;
 int textIndex = 0;
 
-void initMap2(std::string map);
-
 int main() {
-    /*GetWindowRect(console, &r);
+    GetWindowRect(console, &r);
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
@@ -15,13 +13,13 @@ int main() {
     SetWindowLong(console, GWL_STYLE, style);
     SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_NOZORDER);
     removeScrollbar();
-    SetWindowTextW(console, L"Square RPG");*/
+    SetWindowTextW(console, L"Square RPG");
 
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("newMap2.txt");
+    std::ifstream m("newMap3.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -36,7 +34,7 @@ int main() {
     keyPress();
 }
 
-void initCell(cell c) {
+void initCell(Cell c) {
     c.type = ' ';
     c.value = 0;
     c.fore = 0;
@@ -47,8 +45,8 @@ void initCell(cell c) {
     c.isStart = false;
 }
 
-cell copyCell(cell c) {
-    cell newCell;
+Cell copyCell(Cell c) {
+    Cell newCell;
     newCell.type = c.type;
     newCell.value = c.value;
     newCell.fore = c.fore;
@@ -70,7 +68,7 @@ void initMap2(std::string map) {
     int idx = 6, r = 0;
     struct cell2 {
         char type;
-        cell cell;
+        Cell cell;
     };
     cell2 lastCell = {
         0,
@@ -86,8 +84,8 @@ void initMap2(std::string map) {
         }
     };
     initCell(lastCell.cell);
-    frames[0] = std::vector<std::vector<cell>>(rows, std::vector<cell>());
-    frames[1] = std::vector<std::vector<cell>>(rows, std::vector<cell>());
+    frames[0] = std::vector<std::vector<Cell>>(rows, std::vector<Cell>());
+    frames[1] = std::vector<std::vector<Cell>>(rows, std::vector<Cell>());
     bool start = false;
     while (idx < (int)map.length()) {
         const char type = map[idx];
@@ -238,76 +236,53 @@ void updateDisplay(int val, int oldR, int oldC, int newR, int newC) {
     reset();
 }
 
-void updateDisplayPlayer(int oldR, int oldC, int newR, int newC) {
+void updateDisplay2(int oldR, int oldC, int newR, int newC) {
     if (oldR >= screenPos.r && oldR < screenPos.r + screenSize && oldC >= screenPos.c && oldC < screenPos.c + screenSize * 2) {
         Pos oldPos = mapToScreen({oldR, oldC});
         setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
         for (int i = 0; i < 2; i++) {
-            setColor2(frames[0][oldR][oldC + i]);
-            const char val = frames[0][oldR][oldC + i].value;
+            setColor2(frames[currFrame][oldR][oldC + i]);
+            const char val = frames[currFrame][oldR][oldC + i].value;
             printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
         }
     }
     Pos newPos = mapToScreen({newR, newC});
     setCursor(rOffset + newPos.r, cOffset + newPos.c);
-    setColor2(frames[0][newR][newC]);
+    setColor2(frames[currFrame][newR][newC]);
     printf("  ");
     reset();
 }
 
-void updateDisplayEnemy(int oldR, int oldC, int newR, int newC) {
-    if (oldR >= screenPos.r && oldR < screenPos.r + screenSize && oldC >= screenPos.c && oldC < screenPos.c + screenSize * 2) {
-        Pos oldPos = mapToScreen({oldR, oldC});
-        setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
-        for (int i = 0; i < 2; i++) {
-            setColor2(frames[0][oldR][oldC + i]);
-            const char val = frames[0][oldR][oldC + i].value;
-            printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
-        }
-    }
-    Pos newPos = mapToScreen({newR, newC});
-    setCursor(rOffset + newPos.r, cOffset + newPos.c);
-    setColor2(frames[0][newR][newC]);
-    printf("  ");
-    reset();
-}
-
-void changePosPlayer(int newR, int newC) {
-    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && frames[0][newR][newC].type == ' ') {
-        frames[0][playerPos->r][playerPos->c].isPlayer = false;
-        frames[0][playerPos->r][playerPos->c + 1].isPlayer = false;
-        frames[0][newR][newC].isPlayer = true;
-        frames[0][newR][newC + 1].isPlayer = true;
+void changePos2(Pos* pos, int newR, int newC, bool player) {
+    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && frames[currFrame][newR][newC].type == ' ' && !frames[currFrame][newR][newC].isPlayer && !frames[currFrame][newR][newC].isEnemy) {
         int rChange = 0, cChange = 0;
-        if (newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + screenSize < rows) {
-            rChange++;
-        } else if (screenPos.r - 1 >= 0 && newR < screenPos.r + screenThreshold) {
-            rChange--;
-        } else if (newC >= screenPos.c + screenSize * 2 - screenThreshold * 2 && screenPos.c + screenSize * 2 < cols) {
-            cChange++;
-        } else if (screenPos.c - 1 >= 0 && newC < screenPos.c + screenThreshold * 2) {
-            cChange--;
+        if (player) {
+            frames[currFrame][pos->r][pos->c].isPlayer = false;
+            frames[currFrame][pos->r][pos->c + 1].isPlayer = false;
+            frames[currFrame][newR][newC].isPlayer = true;
+            frames[currFrame][newR][newC + 1].isPlayer = true;
+            if (newR >= screenPos.r + screenSize - screenThreshold && screenPos.r + screenSize < rows) {
+                rChange++;
+            } else if (screenPos.r - 1 >= 0 && newR < screenPos.r + screenThreshold) {
+                rChange--;
+            } else if (newC >= screenPos.c + screenSize * 2 - screenThreshold * 2 && screenPos.c + screenSize * 2 < cols) {
+                cChange++;
+            } else if (screenPos.c - 1 >= 0 && newC < screenPos.c + screenThreshold * 2) {
+                cChange--;
+            }
+        } else {
+            frames[currFrame][pos->r][pos->c].isEnemy = false;
+            frames[currFrame][pos->r][pos->c + 1].isEnemy = false;
+            frames[currFrame][newR][newC].isEnemy = true;
+            frames[currFrame][newR][newC + 1].isEnemy = true;
         }
         if (rChange + cChange != 0) {
             screenPos.r += rChange;
             screenPos.c += cChange * 2;
             printScreen2();
         } else if (newR >= screenPos.r && newR < screenPos.r + screenSize && newC >= screenPos.c && newC < screenPos.c + screenSize * 2) {
-            updateDisplayPlayer(playerPos->r, playerPos->c, newR, newC);
+            updateDisplay2(pos->r, pos->c, newR, newC);
         }
-        playerPos->r = newR;
-        playerPos->c = newC;
-    }
-}
-
-void changePosEnemy(Pos* pos, int newR, int newC) {
-    if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && frames[0][newR][newC].type == ' ') {
-        frames[0][pos->r][pos->c].isEnemy = false;
-        frames[0][pos->r][pos->c + 1].isEnemy = false;
-        frames[0][newR][newC].isEnemy = true;
-        frames[0][newR][newC + 1].isEnemy = true;
-        if (newR >= screenPos.r && newR < screenPos.r + screenSize && newC >= screenPos.c && newC < screenPos.c + screenSize * 2)
-            updateDisplayEnemy(pos->r, pos->c, newR, newC);
         pos->r = newR;
         pos->c = newC;
     }
@@ -364,7 +339,7 @@ void keyPress() {
                             break;
                     }
                     //changePos(M_PLAYER, playerPos, playerPos->r + rChange, playerPos->c + cChange);
-                    changePosPlayer(playerPos->r + rChange, playerPos->c + cChange * 2);
+                    changePos2(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
                     enemyAI();
                 } else if (kbCode == KB_SPACE) {
                     enemyAI();
@@ -373,9 +348,10 @@ void keyPress() {
                     updateSelection();
                 } else if (kbCode == KB_ENTER) {
                     bool foundNPC = false;
-                    const int options[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+                    const int options[4][2] = {{1, 0}, {-1, 0}, {0, 2}, {0, -2}};
                     for (int i = 0; !foundNPC && i < 4; i++)
-                        foundNPC = mapCoord[playerPos->r + options[i][0]][playerPos->c + options[i][1]] == M_NPC;
+                        //foundNPC = mapCoord[playerPos->r + options[i][0]][playerPos->c + options[i][1]] == M_NPC;
+                        foundNPC = frames[currFrame][playerPos->r + options[i][0]][playerPos->c + options[i][1]].type == '!';
                     if (foundNPC) {
                         changeWindow(890, 700);
                         Sleep(500);
@@ -427,7 +403,7 @@ std::vector<Node*> createPath(Node* current) {
 }
 
 int heuristic(Node node) {
-    return std::abs(node.r - playerPos->r) + std::abs(node.c - playerPos->c);
+    return std::abs(node.r - playerPos->r) + (std::abs(node.c - playerPos->c) / 2);
 }
 
 Node* findMin(std::vector<Node*> list) {
@@ -459,7 +435,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
             int newR = current->r + options[i][0];
             int newC = current->c + options[i][1];
             //if (newR < 0 || newR == rows || newC < 0 || newC == cols || !(mapCoord[newR][newC] == 0 || mapCoord[newR][newC] == M_PLAYER))
-            if (newR < 0 || newR == rows || newC < 0 || newC == cols || !(frames[0][newR][newC].type == ' ' || frames[0][newR][newC].isPlayer))
+            if (newR < 0 || newR == rows || newC < 0 || newC == cols || frames[currFrame][newR][newC].type != ' ' || frames[currFrame][newR][newC].isEnemy)
                 continue;
             Pos p = {newR, newC};
             if (std::find(closedSet.begin(), closedSet.end(), p) != closedSet.end())
@@ -494,9 +470,11 @@ std::vector<Node*> pathfind(Node start, Node goal) {
 void enemyAI() {
     for (Pos* pos : enemyPos) {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
-        if (!list.empty())
+        //for (Node* p : list)
+            //std::cout << pos << "," << p->c << "," << p->c << "\n";
+        if (!list.empty() && !(list[1]->r == playerPos->r && list[1]->c == playerPos->c))
             //changePos(M_ENEMY, pos, list[1]->r, list[1]->c);
-            changePosEnemy(pos, list[1]->r, list[1]->c);
+            changePos2(pos, list[1]->r, list[1]->c, false);
     }
 }
 
