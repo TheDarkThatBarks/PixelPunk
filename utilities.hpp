@@ -37,6 +37,10 @@ struct Cell {
     bool isEnemy;
     bool isNPC;
     bool isStart;
+
+    bool operator==(Cell c) {
+        return c.type == type /*&& c.value == value && c.fore == fore && c.back == back && c.isPlayer == isPlayer && c.isEnemy == isEnemy*/;
+    }
 };
 
 extern std::vector<std::vector<Cell>> frames[2];

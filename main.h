@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>
+#include <chrono>
 
 #include "animations.hpp"
 
@@ -43,10 +44,8 @@ struct Node {
 
 void initMap(std::string map);
 void initMap2(std::string map);
-void updateDisplay(int val, int oldR, int oldC, int newR, int newC);
-void updateDisplay2(int oldR, int oldC, int newR, int newC);
-void changePos(int val, Pos* pos, int newR, int newC);
-void changePos2(Pos* pos, int newR, int newC, bool player);
+void updateDisplay(int oldR, int oldC, int newR, int newC);
+void changePos(Pos* pos, int newR, int newC, bool player);
 void keyPress();
 
 Node* nodeInit(int r, int c, int f, int g, Node* prev);

@@ -16,6 +16,7 @@ const int maxCharsConvo = convoSize * 2 - 9;
 std::string currentDialogue;
 
 int currFrame = 0;
+std::vector<Pos> animChangeList;
 
 void loadAnimation() {
     std::vector<void (*)()> funcs;
@@ -49,7 +50,6 @@ void loadAnimation() {
 }
 
 void printScreen2() {
-    printBox();
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
@@ -60,7 +60,7 @@ void printScreen2() {
             printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
         }
     }
-    reset();
+    //reset();
 }
 
 void printScreen() {

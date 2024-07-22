@@ -29,6 +29,7 @@ extern std::string currentDialogue;
 extern std::string map;
 
 extern int currFrame;
+extern std::vector<Pos> animChangeList;
 
 void loadAnimation();
 void printScreen();
