@@ -20,6 +20,8 @@ extern RECT r;
 extern int windowWidth;
 extern int windowHeight;
 
+extern int rows, cols;
+
 struct Pos {
     int r, c;
 

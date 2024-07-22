@@ -18,6 +18,9 @@ std::string currentDialogue;
 int currFrame = 0;
 std::vector<Pos> animChangeList;
 
+std::vector<Pos> redrawList;
+Reprint reprint;
+
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
@@ -54,7 +57,6 @@ void printScreen2() {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
             Pos pos = screenToMap({r, c});
-            //printf("%i,%i,%i,%i,%i,%i\n", screenPos.r, screenPos.c, r, c, pos.r, pos.c);
             char val = frames[currFrame][pos.r][pos.c].value;
             setColor2(frames[currFrame][pos.r][pos.c]);
             printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
@@ -78,6 +80,46 @@ void printScreen() {
                 printf(r == screenSize - 1 ? "__" : "  ");
             }
         }
+    }
+}
+
+void printCell(Pos pos, Pos coord) {
+    setCursor(rOffset + coord.r, cOffset + coord.c);
+    setColor2(frames[currFrame][pos.r][pos.c]);
+    char val = frames[currFrame][pos.r][pos.c].value;
+    printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
+}
+
+void updateScreen(int dir) {
+    for (int i = 0; i < (int)redrawList.size(); i += reprint.reprint ? 2 : 1) {
+        Pos pos = redrawList[i];
+        if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
+            Pos screenCoord = mapToScreen(pos);
+            for (int i = 0; i < 2; i++)
+                printCell({pos.r, pos.c + i}, {screenCoord.r, screenCoord.c + i});
+        }
+    }
+    redrawList.clear();
+    if (reprint.reprint) {
+        screenPos.r += reprint.rChange;
+        screenPos.c += reprint.cChange;
+        for (int r = 0; r < screenSize; r++) {
+            for (int c = 0; c < screenSize * 2; c++) {
+                Pos pos = screenToMap({r, c});
+                if (dir == 0 && pos.r + 1 != rows && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r + 1][pos.c]) {
+                    continue;
+                } else if (dir == 1 && pos.r - 1 != -1 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r - 1][pos.c]) {
+                    continue;
+                } else if (dir == 2 && pos.c + 2 < cols && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c + 2]) {
+                    continue;
+                } else if (dir == 3 && pos.c - 2 >= 0 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c - 2]) {
+                    continue;
+                } else {
+                    printCell(pos, {r, c});
+                }
+            }
+        }
+        reprint.reprint = false;
     }
 }
 

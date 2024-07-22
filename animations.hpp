@@ -31,9 +31,19 @@ extern std::string map;
 extern int currFrame;
 extern std::vector<Pos> animChangeList;
 
+extern std::vector<Pos> redrawList;
+struct Reprint {
+    bool reprint;
+    int rChange;
+    int cChange;
+};
+extern Reprint reprint;
+
 void loadAnimation();
 void printScreen();
 void printScreen2();
+void printCell(Pos pos, Pos coord);
+void updateScreen(int dir);
 void printBox();
 void printMapBasic();
 void clearScreen();

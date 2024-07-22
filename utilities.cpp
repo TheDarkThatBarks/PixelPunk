@@ -11,16 +11,27 @@ Pos screenPos;
 std::vector<std::vector<int>> mapCoord;
 std::vector<std::vector<Cell>> frames[2];
 
+int rows, cols;
+
 Pos screenToMap(Pos pos) {
+    /*Pos newPos;
     pos.r += screenPos.r;
     pos.c += screenPos.c;
-    return pos;
+    return pos;*/
+    return {
+        pos.r + screenPos.r,
+        pos.c + screenPos.c
+    };
 }
 
 Pos mapToScreen(Pos pos) {
-    pos.r -= screenPos.r;
+    /*pos.r -= screenPos.r;
     pos.c -= screenPos.c;
-    return pos;
+    return pos;*/
+    return {
+        pos.r - screenPos.r,
+        pos.c - screenPos.c
+    };
 }
 
 void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs) {

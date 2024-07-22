@@ -4,13 +4,6 @@ std::string map;
 std::vector<std::string> mapText;
 int textIndex = 0;
 
-std::vector<Pos> redrawList;
-struct {
-    bool reprint;
-    int rChange;
-    int cChange;
-} reprint;
-
 int main() {
     GetWindowRect(console, &r);
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
@@ -234,23 +227,6 @@ void initMap(std::string map) {
     }
 }
 
-void updateDisplay(int oldR, int oldC, int newR, int newC) {
-    if (oldR >= screenPos.r && oldR < screenPos.r + screenSize && oldC >= screenPos.c && oldC < screenPos.c + screenSize * 2) {
-        Pos oldPos = mapToScreen({oldR, oldC});
-        setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
-        for (int i = 0; i < 2; i++) {
-            setColor2(frames[currFrame][oldR][oldC + i]);
-            const char val = frames[currFrame][oldR][oldC + i].value;
-            printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
-        }
-    }
-    Pos newPos = mapToScreen({newR, newC});
-    setCursor(rOffset + newPos.r, cOffset + newPos.c);
-    setColor2(frames[currFrame][newR][newC]);
-    printf("  ");
-    reset();
-}
-
 void changePos(Pos* pos, int newR, int newC, bool player) {
     if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && frames[currFrame][newR][newC].type == ' ') {
         int rChange = 0, cChange = 0;
@@ -296,60 +272,6 @@ void changePos(Pos* pos, int newR, int newC, bool player) {
         }
         pos->r = newR;
         pos->c = newC;
-    }
-}
-
-void updateScreen(int dir) {
-    if (reprint.reprint) {
-        for (int i = 0; i < (int)redrawList.size(); i += 2) {
-            Pos pos = redrawList[i];
-            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                Pos oldPos = mapToScreen({pos.r, pos.c});
-                setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
-                for (int i = 0; i < 2; i++) {
-                    setColor2(frames[currFrame][pos.r][pos.c + i]);
-                    const char val = frames[currFrame][pos.r][pos.c + i].value;
-                    printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
-                }
-            }
-        }
-        redrawList.clear();
-        screenPos.r += reprint.rChange;
-        screenPos.c += reprint.cChange;
-        for (int r = 0; r < screenSize; r++) {
-            for (int c = 0; c < screenSize * 2; c++) {
-                Pos pos = screenToMap({r, c});
-                if (dir == 0 && pos.r + 1 != rows && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r + 1][pos.c]) {
-                    continue;
-                } else if (dir == 1 && pos.r - 1 != -1 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r - 1][pos.c]) {
-                    continue;
-                } else if (dir == 2 && pos.c + 2 < cols && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c + 2]) {
-                    continue;
-                } else if (dir == 3 && pos.c - 2 >= 0 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c - 2]) {
-                    continue;
-                } else {
-                    setCursor(rOffset + r, cOffset + c);
-                    char val = frames[currFrame][pos.r][pos.c].value;
-                    setColor2(frames[currFrame][pos.r][pos.c]);
-                    printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
-                }
-            }
-        }
-        reprint.reprint = false;
-    } else {
-        for (Pos pos : redrawList) {
-            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                Pos oldPos = mapToScreen({pos.r, pos.c});
-                setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
-                for (int i = 0; i < 2; i++) {
-                    setColor2(frames[currFrame][pos.r][pos.c + i]);
-                    const char val = frames[currFrame][pos.r][pos.c + i].value;
-                    printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
-                }
-            }
-        }
-        redrawList.clear();
-        reset();
     }
 }
 
@@ -423,17 +345,13 @@ void keyPress() {
                 }
             }
         }
-        auto end = std::chrono::system_clock::now();
-        elapsed += end - start;
+        elapsed += std::chrono::system_clock::now() - start;
         if (elapsed >= std::chrono::milliseconds(500)) {
             currFrame = -currFrame + 1;
             for (Pos pos : animChangeList) {
                 if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                    Pos oldPos = mapToScreen({pos.r, pos.c});
-                    setCursor(rOffset + oldPos.r, cOffset + oldPos.c);
-                    setColor2(frames[currFrame][pos.r][pos.c]);
-                    const char val = frames[currFrame][pos.r][pos.c].value;
-                    printf("%c", oldPos.r == screenSize - 1 && val == ' ' ? '_' : val);
+                    Pos screenCoord = mapToScreen(pos);
+                    printCell(pos, screenCoord);
                 }
             }
             reset();
@@ -529,7 +447,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
 void enemyAI() {
     for (Pos* pos : enemyPos) {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
-        if (!list.empty() && !(list[1]->r == playerPos->r && list[1]->c == playerPos->c))
+        if (!list.empty())
             changePos(pos, list[1]->r, list[1]->c, false);
     }
 }

@@ -23,8 +23,6 @@
 #define MOVE 0
 #define MENU 1
 
-int rows, cols;
-
 int kbMode = MOVE;
 int selection = 0;
 
@@ -44,7 +42,6 @@ struct Node {
 
 void initMap(std::string map);
 void initMap2(std::string map);
-void updateDisplay(int oldR, int oldC, int newR, int newC);
 void changePos(Pos* pos, int newR, int newC, bool player);
 void keyPress();
 
