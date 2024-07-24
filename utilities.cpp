@@ -12,12 +12,9 @@ std::vector<std::vector<int>> mapCoord;
 std::vector<std::vector<Cell>> frames[2];
 
 int rows, cols;
+Pos* playerPos = (Pos*)malloc(sizeof(Pos));
 
 Pos screenToMap(Pos pos) {
-    /*Pos newPos;
-    pos.r += screenPos.r;
-    pos.c += screenPos.c;
-    return pos;*/
     return {
         pos.r + screenPos.r,
         pos.c + screenPos.c
@@ -25,9 +22,6 @@ Pos screenToMap(Pos pos) {
 }
 
 Pos mapToScreen(Pos pos) {
-    /*pos.r -= screenPos.r;
-    pos.c -= screenPos.c;
-    return pos;*/
     return {
         pos.r - screenPos.r,
         pos.c - screenPos.c

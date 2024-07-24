@@ -46,27 +46,34 @@
     let width = 0;
     let height = 0;
     let frames = [[], []];
+    let npcIDs = [];
 
     let cursorRow = 0;
     let cursorCol = 0;
-    let curFrame = 0;
-    let curPlayer = [-1, -1];
-    let curStart = [-1, -1];
+    let currFrame = 0;
+    let currPlayer = [-1, -1];
+    let currStart = [-1, -1];
 
     const setCursorPos = function (r, c) {
         document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
         cursorRow = r;
         cursorCol = c;
         const cell = document.querySelector(`#r${r}c${c}`);
-        document.querySelector("#fore-color").value = frames[curFrame][r][c].fore;
-        document.querySelector("#back-color").value = frames[curFrame][r][c].back;
+        document.querySelector("#fore-color").value = frames[currFrame][r][c].fore;
+        document.querySelector("#back-color").value = frames[currFrame][r][c].back;
         cell.parentElement.style.outline = "2px solid " + WHITE;
         cell.focus();
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
-        document.querySelector("#player").checked = frames[curFrame][r][c].isPlayer;
-        document.querySelector("#npc").checked = frames[curFrame][r][c].isNPC;
-        document.querySelector("#start").checked = frames[curFrame][r][c].isStart;
-        document.querySelector("#type").value = frames[curFrame][r][c].type;
+        document.querySelector("#player").checked = frames[currFrame][r][c].isPlayer;
+        document.querySelector("#npc").checked = frames[currFrame][r][c].isNPC;
+        document.querySelector("#start").checked = frames[currFrame][r][c].isStart;
+        const type = frames[currFrame][r][c].type;
+        document.querySelector("#type").value = type;
+        if (type === "!") {
+            document.querySelector("#npc-id").value = npcIDs.find((e) => e.r === r && e.c === c).id;
+        } else {
+            document.querySelector("#npc-id").value = "";
+        }
     };
     
     document.addEventListener("keydown", (event) => {
@@ -132,7 +139,7 @@
     };
 
     const changeVal = function (r, c) {
-        frames[curFrame][r][c].value = document.querySelector(`#r${r}c${c}`).value;
+        frames[currFrame][r][c].value = document.querySelector(`#r${r}c${c}`).value;
         //console.log("changeVal", frames);
     };
 
@@ -140,7 +147,7 @@
         const color = document.querySelector("#fore-color").value;
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.color = colors[color];
-        frames[curFrame][cursorRow][cursorCol].fore = parseInt(color);
+        frames[currFrame][cursorRow][cursorCol].fore = parseInt(color);
         //console.log(frames);
     };
 
@@ -148,7 +155,7 @@
         const color = document.querySelector("#back-color").value;
         const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
         cell.style.backgroundColor = colors[color];
-        frames[curFrame][cursorRow][cursorCol].back = parseInt(color);
+        frames[currFrame][cursorRow][cursorCol].back = parseInt(color);
         //console.log(frames);
     };
 
@@ -201,6 +208,7 @@
             let idx = 6, r = 0;
             let lastCell = "";
             frames = [[], []];
+            npcIDs = [];
             for (let i = 0; i < height; i++) {
                 frames[0].push([]);
                 frames[1].push([]);
@@ -233,6 +241,13 @@
                     isNPC: type === '!',
                     isStart: start
                 };
+                if (cell.isNPC) {
+                    npcIDs.push({
+                        r: r,
+                        c: frames[0][r].length,
+                        id: cellStr
+                    });
+                }
                 start = false;
                 if (type === '*') {
                     cell.type = lastCell.type;
@@ -268,10 +283,10 @@
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
             for (let j = 0; j < width; j++) {
-                const cell = frames[curFrame][i][j];
+                const cell = frames[currFrame][i][j];
                 //console.log(cell);
-                if (cell.isPlayer && curPlayer[0] === -1)
-                    curPlayer = [i, j];
+                if (cell.isPlayer && currPlayer[0] === -1)
+                    currPlayer = [i, j];
                 str += `<td width=${cellWidth}px height=${cellWidth * 2}px>
                             <input
                                 value="${cell.value}"
@@ -289,7 +304,7 @@
     };
 
     const changeFrame = function (frame) {
-        curFrame = frame;
+        currFrame = frame;
         load();
     };
 
@@ -303,8 +318,8 @@
             button.innerHTML = "Play";
         } else {
             playInterval = setInterval(() => {
-                changeFrame(-curFrame + 1);
-                document.querySelector(`#frame${curFrame + 1}`).checked = true;
+                changeFrame(-currFrame + 1);
+                document.querySelector(`#frame${currFrame + 1}`).checked = true;
             }, 500);
             playing = true;
             button.innerHTML = "Stop";
@@ -312,9 +327,9 @@
     };
 
     const copyFrame = function () {
-        frames[-curFrame + 1] = JSON.parse(JSON.stringify(frames[curFrame]));
-        changeFrame(-curFrame + 1);
-        document.querySelector(`#frame${curFrame + 1}`).checked = true;
+        frames[-currFrame + 1] = JSON.parse(JSON.stringify(frames[currFrame]));
+        changeFrame(-currFrame + 1);
+        document.querySelector(`#frame${currFrame + 1}`).checked = true;
     };
 
     const setPlayer = function (checked) {
@@ -324,27 +339,27 @@
             frame[cursorRow][col + 1].isPlayer = checked;
         }
         //console.log(checked);
-        if (curPlayer[0] !== -1) {
+        if (currPlayer[0] !== -1) {
             //console.log("DEBUG");
             for (frame of frames) {
-                frame[curPlayer[0]][curPlayer[1]].isPlayer = false;
-                frame[curPlayer[0]][curPlayer[1] + 1].isPlayer = false;
+                frame[currPlayer[0]][currPlayer[1]].isPlayer = false;
+                frame[currPlayer[0]][currPlayer[1] + 1].isPlayer = false;
             }
-            const cell1 = frames[curFrame][curPlayer[0]][curPlayer[1]];
-            const cell2 = frames[curFrame][curPlayer[0]][curPlayer[1] + 1];
-            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.color = colors[cell1.fore];
-            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1]}`).style.backgroundColor = colors[cell1.back];
-            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.color = colors[cell2.fore];
-            document.querySelector(`#r${curPlayer[0]}c${curPlayer[1] + 1}`).style.backgroundColor = colors[cell2.back];
+            const cell1 = frames[currFrame][currPlayer[0]][currPlayer[1]];
+            const cell2 = frames[currFrame][currPlayer[0]][currPlayer[1] + 1];
+            document.querySelector(`#r${currPlayer[0]}c${currPlayer[1]}`).style.color = colors[cell1.fore];
+            document.querySelector(`#r${currPlayer[0]}c${currPlayer[1]}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${currPlayer[0]}c${currPlayer[1] + 1}`).style.color = colors[cell2.fore];
+            document.querySelector(`#r${currPlayer[0]}c${currPlayer[1] + 1}`).style.backgroundColor = colors[cell2.back];
         }
         if (checked) {
             document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[5];
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[5];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[5];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[5];
-            curPlayer = [cursorRow, col];
+            currPlayer = [cursorRow, col];
         } else {
-            curPlayer = [-1, -1];
+            currPlayer = [-1, -1];
         }
         //console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
     };
@@ -361,8 +376,8 @@
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[12];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[12];
         } else {
-            const cell1 = frames[curFrame][cursorRow][col];
-            const cell2 = frames[curFrame][cursorRow][col + 1];
+            const cell1 = frames[currFrame][cursorRow][col];
+            const cell2 = frames[currFrame][cursorRow][col + 1];
             document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[cell1.fore];
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[cell2.fore];
@@ -380,11 +395,16 @@
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[9];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[9];
         } else {
-            const cell1 = frames[curFrame][cursorRow][col];
-            const cell2 = frames[curFrame][cursorRow][col + 1];
+            const cell1 = frames[currFrame][cursorRow][col];
+            const cell2 = frames[currFrame][cursorRow][col + 1];
             document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
             document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
         }
+        npcIDs.push({
+            r: cursorRow,
+            c: col,
+            id: (frames[currFrame][cursorRow][col].value || " ") + frames[currFrame][cursorRow][col].fore.toString(16) + frames[currFrame][cursorRow][col].back.toString(16)
+        });
     };
 
     const setStart = function (checked) {
@@ -392,18 +412,18 @@
         for (frame of frames) {
             frame[cursorRow][col].isStart = checked;
             frame[cursorRow][col + 1].isStart = checked;
-            if (curStart[0] !== -1) {
-                frame[curStart[0]][curStart[1]].isStart = false;
-                frame[curStart[0]][curStart[1] + 1].isStart = false;
+            if (currStart[0] !== -1) {
+                frame[currStart[0]][currStart[1]].isStart = false;
+                frame[currStart[0]][currStart[1] + 1].isStart = false;
             }
         }
-        curStart = checked ? [cursorRow, col] : [-1, -1];
+        currStart = checked ? [cursorRow, col] : [-1, -1];
     };
 
     const changeType = function () {
         const col = Math.floor(cursorCol / 2) * 2;
         const type = document.querySelector("#type").value;
-        const oldType = frames[curFrame][cursorRow][col].type;
+        const oldType = frames[currFrame][cursorRow][col].type;
         if (oldType === "+") {
             setPlayer(false);
         } else if (oldType === "!") {
@@ -491,6 +511,7 @@
         <option value="!">NPC</option>
         <option value="+">Player</option>
     </select>
+    <input id="npc-id" style="width: 50px" onclick="navigator.clipboard.writeText(this.value)" readonly>
     <br><br>
     <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
     <label for="player">Player</label>

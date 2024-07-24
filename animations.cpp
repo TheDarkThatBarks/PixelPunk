@@ -20,6 +20,7 @@ std::vector<Pos> animChangeList;
 
 std::vector<Pos> redrawList;
 Reprint reprint;
+std::vector<npcID> npcIDs;
 
 void loadAnimation() {
     std::vector<void (*)()> funcs;
@@ -38,6 +39,37 @@ void loadAnimation() {
     funcs.push_back(&printMapBasic);
     funcs.push_back(&printScreen);
     loopFunctions(3, 500, 50, &printScreen, funcs);
+
+    Sleep(500);
+    printMenu(1);
+
+    Sleep(500);
+    /*changeWindow(890, 700);
+    Sleep(500);
+    conversation("Dialogue1.txt");
+    Sleep(1000);
+    //clearConvoBox();
+    screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
+}
+
+void loadAnimation2() {
+    std::vector<void (*)()> funcs;
+
+    Sleep(500);
+    screenLoad(screenSize, screenSize, rOffset, cOffset);
+
+    funcs.push_back(&clearScreen);
+    funcs.push_back(&printBox);
+    //loopFunctions(3, 500, 50, &printBox, funcs);
+
+    funcs.push_back(&printMapBasic2);
+    loopFunctions(3, 500, 50, &printMapBasic2, funcs);
+
+    funcs.clear();
+    funcs.push_back(&printMapBasic2);
+    funcs.push_back(&printScreen2);
+    loopFunctions(3, 500, 50, &printScreen2, funcs);
 
     Sleep(500);
     printMenu(1);
@@ -149,6 +181,19 @@ void printMapBasic() {
             screenR++;
         }
         mapR++;
+    }
+}
+
+void printMapBasic2() {
+    for (int r = 0; r < screenSize; r++) {
+        setCursor(rOffset + r, cOffset);
+        for (int c = 0; c < screenSize * 2; c++) {
+            Pos pos = screenToMap({r, c});
+            char val = frames[currFrame][pos.r][pos.c].value;
+            //setColor2(frames[currFrame][pos.r][pos.c]);
+            //printf("%c", frames[currFrame][pos.r][pos.c].type == '+' ? '+' : (r == screenSize - 1 && val == ' ' ? '_' : val));
+            printf("%c", frames[currFrame][pos.r][pos.c].type == ' ' ? (r == screenSize - 1 ? '_' : ' ') : frames[currFrame][pos.r][pos.c].type);
+        }
     }
 }
 
@@ -287,10 +332,23 @@ void conversation(std::string dialogue) {
 
     for (int i = 0, r = 0; i < (int)lines.size(); i++) {
         pos = lines[i].find(":");
-        int speaker = std::stoi(lines[i].substr(0, pos));
+        //int speaker = std::stoi(lines[i].substr(0, pos));
+        std::string speaker = lines[i].substr(0, pos);
         setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 2);
-        setColor(speaker);
-        printf("  ");
+        //setColor(speaker);
+        //printf("  ");
+        Pos npcPos = {-1, -1};
+        if (speaker == "+++") {
+            npcPos = *playerPos;
+        } else {
+            for (npcID npc : npcIDs) {
+                if (npc.id == speaker)
+                    npcPos = {npc.r, npc.c};
+            }
+        }
+        setColor2(frames[currFrame][npcPos.r][npcPos.c]);
+        for (int i = 0; i < 2; i++)
+            printf("%c", frames[currFrame][npcPos.r][npcPos.c].value);
         setColor(0);
         printf(" :");
         Sleep(500);

@@ -28,7 +28,6 @@ int selection = 0;
 
 const int screenThreshold = 3;
 
-Pos* playerPos = (Pos*)malloc(sizeof(Pos));
 std::vector<Pos*> enemyPos;
 
 struct Node {

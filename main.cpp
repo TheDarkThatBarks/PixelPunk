@@ -19,7 +19,7 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("newMap2.txt");
+    std::ifstream m("newMap3.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -29,8 +29,11 @@ int main() {
     /*initMap(map);
     loadAnimation();*/
     initMap2(map);
-    printBox();
-    printScreen2();
+    //printBox();
+    //printMapBasic2();
+    //getch();
+    //printScreen2();
+    loadAnimation2();
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
 }
@@ -118,6 +121,13 @@ void initMap2(std::string map) {
             }
         };
         //std::cout << cell.type << "," << cell.cell.value << "," << cell.cell.fore << "," << cell.cell.back << "," << cell.cell.isPlayer << "," << cell.cell.isNPC << "," << cell.cell.isStart << "\n";
+        if (cell.cell.isNPC) {
+            npcIDs.push_back({
+                r,
+                (int)frames[0][r].size(),
+                cellStr
+            });
+        }
         start = false;
         if (type == '*') {
             animChangeList.push_back({
@@ -315,13 +325,25 @@ void keyPress() {
                     updateSelection();
                 } else if (kbCode == KB_ENTER) {
                     bool foundNPC = false;
+                    Pos npcPos = {-1, -1};
                     const int options[4][2] = {{1, 0}, {-1, 0}, {0, 2}, {0, -2}};
-                    for (int i = 0; !foundNPC && i < 4; i++)
+                    for (int i = 0; !foundNPC && i < 4; i++) {
                         foundNPC = frames[currFrame][playerPos->r + options[i][0]][playerPos->c + options[i][1]].type == '!';
+                        if (foundNPC)
+                            npcPos = {playerPos->r + options[i][0], playerPos->c + options[i][1]};
+                    }
                     if (foundNPC) {
+                        std::string npcId = "";
+                        for (npcID npc : npcIDs) {
+                            if (npc.r == npcPos.r && npc.c == npcPos.c) {
+                                npcId = npc.id;
+                                break;
+                            }
+                        }
                         changeWindow(890, 700);
                         Sleep(500);
-                        conversation("Dialogue1.txt");
+                        if (npcId == " 70")
+                            conversation("Dialogue1.txt");
                         Sleep(1000);
                         screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
                         changeWindow(ORIGINAL_WINDOW_WIDTH, 700);

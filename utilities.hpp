@@ -29,6 +29,7 @@ struct Pos {
         return (r == p.r && c == p.c);
     }
 };
+extern Pos* playerPos;
 
 struct Cell {
     char type;
