@@ -76,7 +76,7 @@ void setColor(int val) {
     }
 }
 
-void setColor2(Cell c) {
+void setColorCell(Cell c) {
     //SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
     SetConsoleTextAttribute(hConsole, ((c.type == '+' ? 5 : (c.type == '-' ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.type == '+' ? 5 : (c.type == '-' ? 12 : c.fore)));
 }

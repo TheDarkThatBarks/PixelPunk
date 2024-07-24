@@ -40,7 +40,6 @@ struct Node {
 };
 
 void initMap(std::string map);
-void initMap2(std::string map);
 void changePos(Pos* pos, int newR, int newC, bool player);
 void keyPress();
 

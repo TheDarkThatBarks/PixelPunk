@@ -59,6 +59,6 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
 void setCursor(short r, short c);
 void setColor(std::string background, std::string text);
 void setColor(int val);
-void setColor2(Cell c);
+void setColorCell(Cell c);
 void reset();
 void removeScrollbar();

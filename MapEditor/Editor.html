@@ -70,7 +70,7 @@
         const type = frames[currFrame][r][c].type;
         document.querySelector("#type").value = type;
         if (type === "!") {
-            document.querySelector("#npc-id").value = npcIDs.find((e) => e.r === r && e.c === c).id;
+            document.querySelector("#npc-id").value = npcIDs.find((e) => e.r === r && e.c === Math.floor(c / 2) * 2).id;
         } else {
             document.querySelector("#npc-id").value = "";
         }
@@ -121,7 +121,7 @@
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
                             >
                         </td>`;
-                for (frame of frames)
+                for (const frame of frames)
                     frame[i].push({
                         type: " ",
                         value: "",
@@ -139,23 +139,61 @@
     };
 
     const changeVal = function (r, c) {
-        frames[currFrame][r][c].value = document.querySelector(`#r${r}c${c}`).value;
+        const val = document.querySelector(`#r${r}c${c}`).value;
+        if (frames[currFrame][r][c].isNPC) {
+            const col = Math.floor(c / 2) * 2;
+            for (const frame of frames) {
+                frame[r][col].value = val;
+                frame[r][col + 1].value = val;
+            }
+            document.querySelector(`#r${r}c${col}`).value = val;
+            document.querySelector(`#r${r}c${col + 1}`).value = val;
+            const npcID = npcIDs.find((e) => e.r == r && e.c == col);
+            npcID.id = (val || " ") + npcID.id.slice(1);
+            document.querySelector("#npc-id").value = npcID.id;
+        } else {
+            frames[currFrame][r][c].value = val;
+        }
         //console.log("changeVal", frames);
     };
 
     const changeCellForeColor = function () {
         const color = document.querySelector("#fore-color").value;
-        const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
-        cell.style.color = colors[color];
-        frames[currFrame][cursorRow][cursorCol].fore = parseInt(color);
+        if (frames[currFrame][cursorRow][cursorCol].isNPC) {
+            const col = Math.floor(cursorCol / 2) * 2;
+            for (const frame of frames) {
+                frame[cursorRow][col].fore = parseInt(color);
+                frame[cursorRow][col + 1].fore = parseInt(color);
+            }
+            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[color];
+            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[color];
+            const npcID = npcIDs.find((e) => e.r == cursorRow && e.c == col);
+            npcID.id = npcID.id[0] + parseInt(color).toString(16) + npcID.id[2];
+            document.querySelector("#npc-id").value = npcID.id;
+        } else {
+            const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
+            cell.style.color = colors[color];
+            frames[currFrame][cursorRow][cursorCol].fore = parseInt(color);
+        }
         //console.log(frames);
     };
 
     const changeCellBackColor = function () {
         const color = document.querySelector("#back-color").value;
-        const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
-        cell.style.backgroundColor = colors[color];
-        frames[currFrame][cursorRow][cursorCol].back = parseInt(color);
+        if (frames[currFrame][cursorRow][cursorCol].isNPC) {
+            const col = Math.floor(cursorCol / 2) * 2;
+            for (const frame of frames) {
+                frame[cursorRow][col].back = parseInt(color);
+                frame[cursorRow][col + 1].back = parseInt(color);
+            }
+            const npcID = npcIDs.find((e) => e.r == cursorRow && e.c == col);
+            npcID.id = npcID.id.slice(0, 2) + parseInt(color).toString(16);
+            document.querySelector("#npc-id").value = npcID.id;
+        } else {
+            const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
+            cell.style.backgroundColor = colors[color];
+            frames[currFrame][cursorRow][cursorCol].back = parseInt(color);
+        }
         //console.log(frames);
     };
 
@@ -244,7 +282,7 @@
                 if (cell.isNPC) {
                     npcIDs.push({
                         r: r,
-                        c: frames[0][r].length,
+                        c: Math.floor(frames[0][r].length / 2) * 2,
                         id: cellStr
                     });
                 }
@@ -260,6 +298,7 @@
                     }
                     cell.isStart = lastCell.isStart;
                     frames[1][r].push(JSON.parse(JSON.stringify(cell)));
+                    cell.type = "*";
                 } else {
                     frames[0][r].push(JSON.parse(JSON.stringify(cell)));
                     if (lastCell !== "" && lastCell.type !== '*')
@@ -334,14 +373,14 @@
 
     const setPlayer = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
-        for (frame of frames) {
+        for (const frame of frames) {
             frame[cursorRow][col].isPlayer = checked;
             frame[cursorRow][col + 1].isPlayer = checked;
         }
         //console.log(checked);
         if (currPlayer[0] !== -1) {
             //console.log("DEBUG");
-            for (frame of frames) {
+            for (const frame of frames) {
                 frame[currPlayer[0]][currPlayer[1]].isPlayer = false;
                 frame[currPlayer[0]][currPlayer[1] + 1].isPlayer = false;
             }
@@ -366,7 +405,7 @@
 
     const setEnemy = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
-        for (frame of frames) {
+        for (const frame of frames) {
             frame[cursorRow][col].isEnemy = checked;
             frame[cursorRow][col + 1].isEnemy = checked;
         }
@@ -387,7 +426,7 @@
 
     const setNPC = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
-        for (frame of frames) {
+        for (const frame of frames) {
             frame[cursorRow][col].isNPC = checked;
             frame[cursorRow][col + 1].isNPC = checked;
         }
@@ -409,7 +448,7 @@
 
     const setStart = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
-        for (frame of frames) {
+        for (const frame of frames) {
             frame[cursorRow][col].isStart = checked;
             frame[cursorRow][col + 1].isStart = checked;
             if (currStart[0] !== -1) {

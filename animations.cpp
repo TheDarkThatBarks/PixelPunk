@@ -53,71 +53,21 @@ void loadAnimation() {
     changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
 }
 
-void loadAnimation2() {
-    std::vector<void (*)()> funcs;
-
-    Sleep(500);
-    screenLoad(screenSize, screenSize, rOffset, cOffset);
-
-    funcs.push_back(&clearScreen);
-    funcs.push_back(&printBox);
-    //loopFunctions(3, 500, 50, &printBox, funcs);
-
-    funcs.push_back(&printMapBasic2);
-    loopFunctions(3, 500, 50, &printMapBasic2, funcs);
-
-    funcs.clear();
-    funcs.push_back(&printMapBasic2);
-    funcs.push_back(&printScreen2);
-    loopFunctions(3, 500, 50, &printScreen2, funcs);
-
-    Sleep(500);
-    printMenu(1);
-
-    Sleep(500);
-    /*changeWindow(890, 700);
-    Sleep(500);
-    conversation("Dialogue1.txt");
-    Sleep(1000);
-    //clearConvoBox();
-    screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
-    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
-}
-
-void printScreen2() {
+void printScreen() {
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
             Pos pos = screenToMap({r, c});
             char val = frames[currFrame][pos.r][pos.c].value;
-            setColor2(frames[currFrame][pos.r][pos.c]);
+            setColorCell(frames[currFrame][pos.r][pos.c]);
             printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
-        }
-    }
-    //reset();
-}
-
-void printScreen() {
-    for (int r = 0; r < screenSize; r++) {
-        setCursor(rOffset + r, cOffset);
-        for (int c = 0; c < screenSize; c++) {
-            Pos pos = screenToMap({r, c});
-            int val = mapCoord[pos.r][pos.c];
-            if (val >= M_TEXT) {
-                setColor(0);
-                std::string str = mapText[val - M_TEXT];
-                printf(mapText[val - M_TEXT].c_str());
-            } else {
-                setColor(mapCoord[pos.r][pos.c]);
-                printf(r == screenSize - 1 ? "__" : "  ");
-            }
         }
     }
 }
 
 void printCell(Pos pos, Pos coord) {
     setCursor(rOffset + coord.r, cOffset + coord.c);
-    setColor2(frames[currFrame][pos.r][pos.c]);
+    setColorCell(frames[currFrame][pos.r][pos.c]);
     char val = frames[currFrame][pos.r][pos.c].value;
     printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
 }
@@ -165,33 +115,11 @@ void printBox() {
 }
 
 void printMapBasic() {
-    setColor(0);
-    std::istringstream f(map);
-	std::string line;
-    int mapR = 0, screenR = 0;
-    while (getline(f, line)) {
-        if (mapR >= screenPos.r && mapR < screenPos.r + screenSize) {
-            std::string str = line.substr(screenPos.c * 2, screenSize * 2);
-            std::replace(str.begin(), str.end(), '0', ' ');
-            std::replace(str.begin(), str.end(), '1', '*');
-            if (screenR == screenSize - 1)
-                std::replace(str.begin(), str.end(), ' ', '_');
-            setCursor(rOffset + screenR, cOffset);
-            printf(str.c_str());
-            screenR++;
-        }
-        mapR++;
-    }
-}
-
-void printMapBasic2() {
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
             Pos pos = screenToMap({r, c});
-            char val = frames[currFrame][pos.r][pos.c].value;
-            //setColor2(frames[currFrame][pos.r][pos.c]);
-            //printf("%c", frames[currFrame][pos.r][pos.c].type == '+' ? '+' : (r == screenSize - 1 && val == ' ' ? '_' : val));
+            //char val = frames[currFrame][pos.r][pos.c].value;
             printf("%c", frames[currFrame][pos.r][pos.c].type == ' ' ? (r == screenSize - 1 ? '_' : ' ') : frames[currFrame][pos.r][pos.c].type);
         }
     }
@@ -346,7 +274,7 @@ void conversation(std::string dialogue) {
                     npcPos = {npc.r, npc.c};
             }
         }
-        setColor2(frames[currFrame][npcPos.r][npcPos.c]);
+        setColorCell(frames[currFrame][npcPos.r][npcPos.c]);
         for (int i = 0; i < 2; i++)
             printf("%c", frames[currFrame][npcPos.r][npcPos.c].value);
         setColor(0);

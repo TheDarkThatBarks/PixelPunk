@@ -46,14 +46,11 @@ struct npcID {
 extern std::vector<npcID> npcIDs;
 
 void loadAnimation();
-void loadAnimation2();
 void printScreen();
-void printScreen2();
 void printCell(Pos pos, Pos coord);
 void updateScreen(int dir);
 void printBox();
 void printMapBasic();
-void printMapBasic2();
 void clearScreen();
 void screenLoad(int width, int height, int rowOffset, int colOffset);
 void screenClose(int width, int height, int rowOffset, int colOffset);

@@ -19,21 +19,16 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("newMap3.txt");
+    std::ifstream m("Maps/newMap3.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
     std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
-    /*initMap(map);
-    loadAnimation();*/
-    initMap2(map);
-    //printBox();
-    //printMapBasic2();
-    //getch();
-    //printScreen2();
-    loadAnimation2();
+    initMap(map);
+    loadAnimation();
+    //printScreen();
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
 }
@@ -62,7 +57,7 @@ Cell copyCell(Cell c) {
     return newCell;
 }
 
-void initMap2(std::string map) {
+void initMap(std::string map) {
     playerPos->r = -1;
     playerPos->c = -1;
     screenPos.r = -1;
@@ -134,6 +129,7 @@ void initMap2(std::string map) {
                 r,
                 (int)frames[0][r].size() - 1
             });
+            //cell.cell.type = lastCell.cell.type;
             cell.cell.isPlayer = lastCell.cell.isPlayer;
             cell.cell.isEnemy = lastCell.cell.isEnemy;
             if (lastCell.cell.isNPC) {
@@ -176,65 +172,6 @@ void initMap2(std::string map) {
                 std::cout << frames[i][j][k].type << "," << frames[i][j][k].value << "," << frames[i][j][k].fore << "," << frames[i][j][k].back << "," << frames[i][j][k].isPlayer << "," << frames[i][j][k].isNPC << "," << frames[i][j][k].isStart << "\n";
         }
     }*/
-}
-
-void initMap(std::string map) {
-    rows = 1, cols = 0;
-	for (int i = 0; i < (int)map.length(); i++) {
-		if (map.at(i) == '\n') {
-			rows++;
-            if (!cols)
-                cols = i / 2;
-        }
-	}
-    if (rows <= screenSize && cols <= screenSize)
-        screenPos = {0, 0};
-    screenPos = {0, 0};
-    mapCoord = std::vector<std::vector<int>>(rows, std::vector<int>(cols, 0));
-    std::istringstream f(map);
-	std::string line;
-    int r = 0;
-    while (getline(f, line)) {
-        for (int c = 0; c < (int)line.length(); c += 2) {
-            char ch = line.at(c);
-            int val = 0;
-            if (ch == '\\') {
-                ch = line.at(c + 1);
-                switch (ch) {
-                    case '!':
-                        val = M_NPC;
-                        break;
-                    case '+':
-                        val = M_PLAYER;
-                        playerPos->r = r;
-                        playerPos->c = c / 2;
-                        break;
-                    case '1':
-                        screenPos.r = r;
-                        screenPos.c = c / 2;
-                    case '*':
-                        val = M_WALL;
-                        break;
-                    case '-': {
-                        val = M_ENEMY;
-                        Pos* p = (Pos*)malloc(sizeof(Pos));
-                        p->r = r;
-                        p->c = c / 2;
-                        enemyPos.push_back(p);
-                        break;
-                    } case '0':
-                        screenPos.r = r;
-                        screenPos.c = c / 2;
-                        break;
-                }
-            } else if (ch != ' ' || line.at(c + 1) != ' ') {
-                val = M_TEXT + textIndex++;
-                mapText.push_back(line.substr(c, 2));
-            }
-            mapCoord[r][c / 2] = val;
-        }
-        r++;
-    }
 }
 
 void changePos(Pos* pos, int newR, int newC, bool player) {
@@ -342,7 +279,7 @@ void keyPress() {
                         }
                         changeWindow(890, 700);
                         Sleep(500);
-                        if (npcId == " 70")
+                        if (npcId == "&70")
                             conversation("Dialogue1.txt");
                         Sleep(1000);
                         screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
