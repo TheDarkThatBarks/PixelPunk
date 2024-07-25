@@ -1,0 +1,2 @@
+!70:I'm a second NPC
+!70:Isn't that cool?

@@ -279,8 +279,11 @@ void keyPress() {
                         }
                         changeWindow(890, 700);
                         Sleep(500);
-                        if (npcId == "&70")
+                        if (npcId == "&70") {
                             conversation("Dialogue1.txt");
+                        } else if (npcId == "!70") {
+                            conversation("Dialogue2.txt");
+                        }
                         Sleep(1000);
                         screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
                         changeWindow(ORIGINAL_WINDOW_WIDTH, 700);

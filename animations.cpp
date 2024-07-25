@@ -115,6 +115,7 @@ void printBox() {
 }
 
 void printMapBasic() {
+    setColor(0);
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
@@ -244,7 +245,7 @@ void printConvoBox() {
 }*/
 
 void conversation(std::string dialogue) {
-    std::ifstream d(dialogue);
+    std::ifstream d("Dialogues/" + dialogue);
 	currentDialogue = std::string((std::istreambuf_iterator<char>(d)), std::istreambuf_iterator<char>());
     std::vector<std::string> lines;
     size_t pos = 0;
