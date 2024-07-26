@@ -19,7 +19,7 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("Maps/newMap3.txt");
+    std::ifstream m("Maps/newMap4.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -27,8 +27,10 @@ int main() {
     std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
     initMap(map);
-    loadAnimation();
-    //printScreen();
+    //loadAnimation();
+    printBox();
+    printScreen();
+    printMenu(1);
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
 }
@@ -222,6 +224,25 @@ void changePos(Pos* pos, int newR, int newC, bool player) {
     }
 }
 
+void shoot(int startR, int startC) {
+    int diffC = std::floor(startC - (playerPos->c + 2));
+    int diffR = std::floor(startR - playerPos->r);
+    float slope = (float)diffR / diffC;
+    reset();
+    std::cout << diffR << "," << diffC << "," << slope << "\n" << screenPos.r << "," << screenSize << "," << screenSize / 2.0 << "," << playerPos->r;
+    getch();
+    bool toTheRight = startC >= playerPos->c + 2;
+    bool usingCol = toTheRight || startC < playerPos->c;
+    for (int i = usingCol ? startC : startR;
+         (usingCol && (i >= playerPos->c + 2 || i < playerPos->c)) || (!usingCol && (i < playerPos->r || i > playerPos->r));
+         (usingCol && toTheRight) || (!usingCol && startR > playerPos->r) ? i-- : i++) {
+        setCursor(rOffset + (usingCol ? startR + (int)std::round(slope * (i - (toTheRight ? startC : 0))) : i), cOffset + (usingCol ? i : startC));
+        printf(".");
+        Sleep(10);
+        //getch();
+    }
+}
+
 void keyPress() {
     int kbCode = 0;
     std::chrono::duration<double> elapsed = std::chrono::duration<double>::zero();
@@ -304,6 +325,13 @@ void keyPress() {
                 } else if (kbCode == KB_TAB) {
                     kbMode = MOVE;
                     printMenu(0);
+                } else if (kbCode == KB_ENTER) {
+                    //shoot(std::floor(screenPos.r + screenSize / 2.0), screenPos.c + screenSize * 2 - 1);
+                    //shoot(screenPos.r, screenPos.c + screenSize * 2 - 1);
+                    //shoot(screenPos.r + screenSize - 1, screenPos.c + screenSize * 2 - 1);
+                    shoot(std::floor(screenPos.r + screenSize / 2.0), screenPos.c);
+                    //shoot(screenPos.r, std::floor((screenPos.c + screenSize * 2) / 2));
+                    //shoot(screenPos.r + screenSize - 1, std::floor((screenPos.c + screenSize * 2) / 2));
                 }
             }
         }
