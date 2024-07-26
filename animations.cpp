@@ -22,6 +22,7 @@ std::vector<Pos> redrawList;
 Reprint reprint;
 std::vector<npcID> npcIDs;
 
+// Runs start animation
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
@@ -53,6 +54,7 @@ void loadAnimation() {
     changeWindow(ORIGINAL_WINDOW_WIDTH, 700);*/
 }
 
+// Displays the section of the map contained within the screen bounds
 void printScreen() {
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
@@ -65,6 +67,7 @@ void printScreen() {
     }
 }
 
+// Prints the cell at a position on the map at a coordinate on the screen
 void printCell(Pos pos, Pos coord) {
     setCursor(rOffset + coord.r, cOffset + coord.c);
     setColorCell(frames[currFrame][pos.r][pos.c]);
@@ -72,6 +75,11 @@ void printCell(Pos pos, Pos coord) {
     printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
 }
 
+// Updates the screen after a player moves
+// Goes through reprint list and removes old positions
+// If the screen does not need to be shifted, the new positions are drawn
+// Otherwise, the screen is reprinted cell by cell
+// If the movement of the screen does not change a coordinate's appearance on the screen, it is not reprinted
 void updateScreen(int dir) {
     for (int i = 0; i < (int)redrawList.size(); i += reprint.reprint ? 2 : 1) {
         Pos pos = redrawList[i];
@@ -88,13 +96,13 @@ void updateScreen(int dir) {
         for (int r = 0; r < screenSize; r++) {
             for (int c = 0; c < screenSize * 2; c++) {
                 Pos pos = screenToMap({r, c});
-                if (dir == 0 && pos.r + 1 != rows && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r + 1][pos.c]) {
+                if (dir == 0 && pos.r + 1 < rows && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r + 1][pos.c]) {
                     continue;
-                } else if (dir == 1 && pos.r - 1 != -1 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r - 1][pos.c]) {
+                } else if (dir == 1 && pos.r > 0 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r - 1][pos.c]) {
                     continue;
                 } else if (dir == 2 && pos.c + 2 < cols && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c + 2]) {
                     continue;
-                } else if (dir == 3 && pos.c - 2 >= 0 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c - 2]) {
+                } else if (dir == 3 && pos.c >= 2 && frames[currFrame][pos.r][pos.c] == frames[currFrame][pos.r][pos.c - 2]) {
                     continue;
                 } else {
                     printCell(pos, {r, c});
@@ -105,6 +113,7 @@ void updateScreen(int dir) {
     }
 }
 
+// Prints the box outline of the screen
 void printBox() {
     std::string str(screenSize * 2, '_');
     for (int r = 0; r < screenSize; r++)
@@ -114,6 +123,7 @@ void printBox() {
     reset();
 }
 
+// Prints a basic version of the map, types instead of values
 void printMapBasic() {
     setColor(0);
     for (int r = 0; r < screenSize; r++) {
@@ -126,6 +136,7 @@ void printMapBasic() {
     }
 }
 
+// Clears the screen by printing ' ' across the screen
 void clearScreen() {
     std::string str = "";
     for (int r = 0; r < rOffset + screenSize; r++)
@@ -134,6 +145,7 @@ void clearScreen() {
     printf(str.c_str());
 }
 
+// Runs animation for "loading" a screen somewhere in the window
 void screenLoad(int width, int height, int rowOffset, int colOffset) {
     int middle = std::round((float)height / 2);
     for (int h = 0; h < middle; h++) {
@@ -147,6 +159,7 @@ void screenLoad(int width, int height, int rowOffset, int colOffset) {
     }
 }
 
+// Runs animation for "closing" a screen somewhere in the window
 void screenClose(int width, int height, int rowOffset, int colOffset) {
     int middle = std::round((float)height / 2);
     for (int h = middle - 2; h >= 0; h--) {
@@ -166,6 +179,8 @@ void screenClose(int width, int height, int rowOffset, int colOffset) {
     printf(std::string(width * 2 + 2, ' ').c_str());
 }
 
+// Prints the menu located under the screen
+// Calling with save == 1 adds the coordinates of each menu item to menuPos
 void printMenu(int save) {
     const int usableScreen = (cOffset * 2) + (screenSize * 2) - (menuCOffset * 2);
     int gaps[MENU_SIZE];
@@ -188,6 +203,7 @@ void printMenu(int save) {
     reset();
 }
 
+// Sets the window to the desired width in the given number of seconds
 void changeWindow(int width, int time) {
     time *= 0.9;
     int sleepTime = 0, increment = INT_MAX;
@@ -226,6 +242,7 @@ void changeWindow(int width, int time) {
     SetWindowLong(console, GWL_STYLE, style);
 }
 
+// Prints the box for a conversation
 void printConvoBox() {
     setCursor(conversationROffset - 1, conversationCOffset);
     printf(std::string(convoSize, '_').c_str());
@@ -244,7 +261,10 @@ void printConvoBox() {
     reset();
 }*/
 
+// Loads given dialogue file, expands window, and displays conversation
 void conversation(std::string dialogue) {
+    changeWindow(890, 700);
+    Sleep(500);
     std::ifstream d("Dialogues/" + dialogue);
 	currentDialogue = std::string((std::istreambuf_iterator<char>(d)), std::istreambuf_iterator<char>());
     std::vector<std::string> lines;
@@ -295,8 +315,12 @@ void conversation(std::string dialogue) {
         }
         Sleep(500);
     }
+    Sleep(1000);
+    screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
 }
 
+// Prints a line of conversation dialogue character by character
 void printConversationText(std::string line) {
     for (char c : line) {
         printf("%c", c);

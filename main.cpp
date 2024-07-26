@@ -4,6 +4,7 @@ std::string map;
 std::vector<std::string> mapText;
 int textIndex = 0;
 
+// Creates and sizes window, loads map file, runs start animation, and starts game loop
 int main() {
     GetWindowRect(console, &r);
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
@@ -35,6 +36,7 @@ int main() {
     keyPress();
 }
 
+// Initializes a Cell struct
 void initCell(Cell c) {
     c.type = ' ';
     c.value = 0;
@@ -46,6 +48,7 @@ void initCell(Cell c) {
     c.isStart = false;
 }
 
+// Copies Cell struct
 Cell copyCell(Cell c) {
     Cell newCell;
     newCell.type = c.type;
@@ -59,6 +62,9 @@ Cell copyCell(Cell c) {
     return newCell;
 }
 
+// Initializes game map using map file (which is encoded using the level editor, see MapEditor/Editor.html)
+// Goes through map file, adding cells to the frames 2D vector, only adding a different cell to the second frame if it is different from the first frame
+// Stores screen start position, player start position, enemy start positions, and NPC positions and IDs
 void initMap(std::string map) {
     playerPos->r = -1;
     playerPos->c = -1;
@@ -176,6 +182,9 @@ void initMap(std::string map) {
     }*/
 }
 
+// Changes the position of the player or an enemy
+// If the player reaches a certain distance from the edge of the screen, will shift the screen on the next animation frame
+// If the player does not reach that distance, will add moved positions to a reprint list
 void changePos(Pos* pos, int newR, int newC, bool player) {
     if (newR >= 0 && newR < rows && newC >= 0 && newC < cols && frames[currFrame][newR][newC].type == ' ') {
         int rChange = 0, cChange = 0;
@@ -224,6 +233,7 @@ void changePos(Pos* pos, int newR, int newC, bool player) {
     }
 }
 
+// Creates a line of '.' from given start position to player
 void shoot(int startR, int startC) {
     int diffC = std::floor(startC - (playerPos->c + 2));
     int diffR = std::floor(startR - playerPos->r);
@@ -243,6 +253,7 @@ void shoot(int startR, int startC) {
     }
 }
 
+// Core game loop, checks for keyboard input and also handles animation frames
 void keyPress() {
     int kbCode = 0;
     std::chrono::duration<double> elapsed = std::chrono::duration<double>::zero();
@@ -298,16 +309,11 @@ void keyPress() {
                                 break;
                             }
                         }
-                        changeWindow(890, 700);
-                        Sleep(500);
                         if (npcId == "&70") {
                             conversation("Dialogue1.txt");
                         } else if (npcId == "!70") {
                             conversation("Dialogue2.txt");
                         }
-                        Sleep(1000);
-                        screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
-                        changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
                     }
                 }
             } else if (kbMode == MENU) {
@@ -350,6 +356,7 @@ void keyPress() {
     }
 }
 
+// Initializes Node struct
 Node* nodeInit(int r, int c, int f, int g, Node* prev) {
     Node* n = (Node*)malloc(sizeof(Node));
     n->r = r;
@@ -360,6 +367,7 @@ Node* nodeInit(int r, int c, int f, int g, Node* prev) {
     return n;
 }
 
+// Creates backwards path from given Node struct
 std::vector<Node*> createPath(Node* current) {
     std::vector<Node*> totalPath;
     totalPath.push_back(current);
@@ -370,10 +378,12 @@ std::vector<Node*> createPath(Node* current) {
     return totalPath;
 }
 
+// Calculates heuristic function for A* algorithm
 int heuristic(Node node) {
     return std::abs(node.r - playerPos->r) + (std::abs(node.c - playerPos->c) / 2);
 }
 
+// Finds minimum cost Node from given list
 Node* findMin(std::vector<Node*> list) {
     Node* min = nodeInit(0, 0, INT_MAX, 0, NULL);
     for (Node* n : list) {
@@ -383,6 +393,7 @@ Node* findMin(std::vector<Node*> list) {
     return min;
 }
 
+// Uses A* algorithm to calculate best path from start Node struct to goal Node struct
 std::vector<Node*> pathfind(Node start, Node goal) {
     std::vector<Node*> openSet;
     std::vector<Pos> closedSet;
@@ -434,6 +445,7 @@ std::vector<Node*> pathfind(Node start, Node goal) {
     return std::vector<Node*>();
 }
 
+// Calculates path to player for each enemy on map and moves them one step closer to player
 void enemyAI() {
     for (Pos* pos : enemyPos) {
         std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
@@ -442,6 +454,7 @@ void enemyAI() {
     }
 }
 
+// Reprints current menu selection in selected color
 void updateSelection() {
     setCursor(menuPos[selection].r, menuPos[selection].c);
     setColor("LIGHT_GRAY", "BLACK");
@@ -449,6 +462,7 @@ void updateSelection() {
     reset();
 }
 
+// Reprints current menu selection in non-selected color and changes selection
 void updateSelection(char dir) {
     setCursor(menuPos[selection].r, menuPos[selection].c);
     setColor(0);

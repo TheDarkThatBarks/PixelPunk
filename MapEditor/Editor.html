@@ -54,6 +54,7 @@
     let currPlayer = [-1, -1];
     let currStart = [-1, -1];
 
+    // Sets the stored cursor position to the given coordinates and updates all visual elements on the page accordingly
     const setCursorPos = function (r, c) {
         document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
         cursorRow = r;
@@ -76,6 +77,7 @@
         }
     };
     
+    // Adds the functionality for using arrow keys to move from cell to cell
     document.addEventListener("keydown", (event) => {
         let arrow = true;
         let rowChange = 0;
@@ -102,6 +104,7 @@
         }
     });
 
+    // Creates the map table with the user provided height and width
     const createTable = function () {
         width = document.querySelector("#width").value * 2;
         height = document.querySelector("#height").value;
@@ -138,6 +141,8 @@
         console.log(frames);
     };
 
+    // Changes the stored value at coordinates on the map of the selected cell
+    // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
     const changeVal = function (r, c) {
         const val = document.querySelector(`#r${r}c${c}`).value;
         if (frames[currFrame][r][c].isNPC) {
@@ -157,6 +162,8 @@
         //console.log("changeVal", frames);
     };
 
+    // Changes the text foreground color of the selected cell
+    // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
     const changeCellForeColor = function () {
         const color = document.querySelector("#fore-color").value;
         if (frames[currFrame][cursorRow][cursorCol].isNPC) {
@@ -178,6 +185,8 @@
         //console.log(frames);
     };
 
+    // Changes the text background color of the selected cell
+    // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
     const changeCellBackColor = function () {
         const color = document.querySelector("#back-color").value;
         if (frames[currFrame][cursorRow][cursorCol].isNPC) {
@@ -199,11 +208,13 @@
 
     let grid = false;
 
+    // Toggles visibility of the cell grid of the map
     const toggleGrid = function () {
         document.querySelector("#table").border = grid ? "0" : "1px solid white";
         grid = !grid;
     };
 
+    // Saves the map into an encoded string
     const save = function () {
         let foundPlayer = false;
         let foundStart = false;
@@ -238,6 +249,8 @@
             alert("Warning: Screen start location not found!");
     };
 
+    // If frame == -1, loads a map from the text box with an encoded map string
+    // If frame != -1, loads the current frame
     const load = function (frame) {
         if (frame === -1) {
             let map = document.querySelector("#map").value;
@@ -342,6 +355,7 @@
         setCursorPos(cursorRow, cursorCol);
     };
 
+    // Changes the frame and reloads the map
     const changeFrame = function (frame) {
         currFrame = frame;
         load();
@@ -350,6 +364,8 @@
     let playing = false;
     let playInterval;
 
+    // Plays and stops the animation
+    // Animation runs at 2 frames per second
     const play = function (button) {
         if (playing) {
             clearInterval(playInterval);
@@ -365,12 +381,14 @@
         }
     };
 
+    // Copies the current frame to the non-selected frame
     const copyFrame = function () {
         frames[-currFrame + 1] = JSON.parse(JSON.stringify(frames[currFrame]));
         changeFrame(-currFrame + 1);
         document.querySelector(`#frame${currFrame + 1}`).checked = true;
     };
 
+    // Sets the position of the player and changes the selected cell's visual fore- and back-ground colors accordingly, and changes the cell's type
     const setPlayer = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
         for (const frame of frames) {
@@ -403,6 +421,7 @@
         //console.log("setPlayer", JSON.parse(JSON.stringify(frames)));
     };
 
+    // Changes the selected cell's visual fore- and back-ground colors accordingly, and changes the cell's type
     const setEnemy = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
         for (const frame of frames) {
@@ -424,6 +443,8 @@
         }
     };
 
+    // Changes the selected cell's visual background color accordingly, and changes the cell's type
+    // Also records the coordinates of the NPC and creates its ID and stores both in the npcIDs list
     const setNPC = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
         for (const frame of frames) {
@@ -446,6 +467,7 @@
         });
     };
 
+    // Sets the position of the screen start and changes the selected cell's isStart value
     const setStart = function (checked) {
         const col = Math.floor(cursorCol / 2) * 2;
         for (const frame of frames) {
@@ -459,6 +481,7 @@
         currStart = checked ? [cursorRow, col] : [-1, -1];
     };
 
+    // Changes the type of the selected cell
     const changeType = function () {
         const col = Math.floor(cursorCol / 2) * 2;
         const type = document.querySelector("#type").value;
@@ -484,6 +507,7 @@
         console.log("changeType", frames);
     };
 
+    // Changes the visual size of every cell in the interface
     const changeCellSize = function (newWidth) {
         cellWidth = newWidth;
         load();

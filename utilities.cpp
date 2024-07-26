@@ -14,6 +14,7 @@ std::vector<std::vector<Cell>> frames[2];
 int rows, cols;
 Pos* playerPos = (Pos*)malloc(sizeof(Pos));
 
+// Converts screen coordinate to map coordinate
 Pos screenToMap(Pos pos) {
     return {
         pos.r + screenPos.r,
@@ -21,6 +22,7 @@ Pos screenToMap(Pos pos) {
     };
 }
 
+// Converts map coordinate to screen coordinate
 Pos mapToScreen(Pos pos) {
     return {
         pos.r - screenPos.r,
@@ -28,6 +30,7 @@ Pos mapToScreen(Pos pos) {
     };
 }
 
+// Runs a start function then loops through the funcs list, running each function with a delay, an n number of times
 void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::vector<void (*)()> funcs) {
     Sleep(startDelay);
     (*startFunc)();
@@ -40,10 +43,13 @@ void loopFunctions(int n, int startDelay, int delay, void (*startFunc)(), std::v
     }
 }
 
+// Sets the console cursor position to a specific coordinate
+// This function exists to use a more intuitive row by column coordinate system
 void setCursor(short r, short c) {
     SetConsoleCursorPosition(hConsole, {c, r});
 }
 
+// Sets the console text color based on background and foreground colors
 void setColor(std::string background, std::string text) {
     const std::string colors[16] = {"BLACK", "DARK_BLUE", "GREEN", "LIGHT_BLUE", "RED", "PURPLE", "YELLOW", "LIGHT_GRAY", "DARK_GRAY",
                                     "BLUE", "LIGHT_GREEN", "LIGHTEST_BLUE", "LIGHT_RED", "LIGHT_PURPLE", "LIGHT_YELLOW", "WHITE"};
@@ -57,6 +63,7 @@ void setColor(std::string background, std::string text) {
     SetConsoleTextAttribute(hConsole, (bgCode * 16) + tCode);
 }
 
+// Sets the console text color based on value of cell, or '0' for default colors (black background, light gray foreground)
 void setColor(int val) {
     switch (val) {
         case M_NPC:
@@ -76,16 +83,19 @@ void setColor(int val) {
     }
 }
 
+// Sets the console text color based on the type of the given cell
 void setColorCell(Cell c) {
     //SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
     SetConsoleTextAttribute(hConsole, ((c.type == '+' ? 5 : (c.type == '-' ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.type == '+' ? 5 : (c.type == '-' ? 12 : c.fore)));
 }
 
+// Resets the console cursor position and the console text color to default
 void reset() {
     setCursor(0, 0);
     setColor(0);
 }
 
+// Removes the scrollbar from the window
 void removeScrollbar() {
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	GetConsoleScreenBufferInfo(hConsole, &info);
