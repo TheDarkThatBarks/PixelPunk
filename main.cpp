@@ -27,6 +27,7 @@ int main() {
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
     std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
+    std::srand(std::time(0));
     initMap(map);
     //loadAnimation();
     printBox();
@@ -153,7 +154,7 @@ void initMap(std::string map) {
                 playerPos->r = r;
                 playerPos->c = frames[0][r].size() - 1;
             }
-            if (cell.cell.isEnemy) {
+            if (cell.cell.isEnemy && frames[0][r][frames[0][r].size() - 2].type != '-') {
                 Pos* p = (Pos*)malloc(sizeof(Pos));
                 p->r = r;
                 p->c = frames[0][r].size() - 1;
@@ -243,13 +244,26 @@ void shoot(int startR, int startC) {
     getch();
     bool toTheRight = startC >= playerPos->c + 2;
     bool usingCol = toTheRight || startC < playerPos->c;
+    std::vector<Pos> list;
     for (int i = usingCol ? startC : startR;
          (usingCol && (i >= playerPos->c + 2 || i < playerPos->c)) || (!usingCol && (i < playerPos->r || i > playerPos->r));
          (usingCol && toTheRight) || (!usingCol && startR > playerPos->r) ? i-- : i++) {
-        setCursor(rOffset + (usingCol ? startR + (int)std::round(slope * (i - (toTheRight ? startC : 0))) : i), cOffset + (usingCol ? i : startC));
+        int r = (usingCol ? startR + (int)std::round(slope * (i - (toTheRight ? startC : 0))) : i);
+        int c = usingCol ? i : startC;
+        setCursor(rOffset + r, cOffset + c);
         printf(".");
+        list.push_back({r, c});
+        if (list.size() > 5) {
+            printCell(screenToMap(list[0]), list[0]);
+            list.erase(list.begin());
+        }
         Sleep(10);
         //getch();
+    }
+    while (!list.empty()) {
+        printCell(screenToMap(list[0]), list[0]);
+        list.erase(list.begin());
+        Sleep(10);
     }
 }
 
@@ -383,6 +397,10 @@ int heuristic(Node node) {
     return std::abs(node.r - playerPos->r) + (std::abs(node.c - playerPos->c) / 2);
 }
 
+int heuristic2(Node node) {
+    return std::round(std::abs(std::sqrt(std::pow(node.r - playerPos->r, 2) + std::pow((node.c - playerPos->c) / 2.0, 2)) - 3));
+}
+
 // Finds minimum cost Node from given list
 Node* findMin(std::vector<Node*> list) {
     Node* min = nodeInit(0, 0, INT_MAX, 0, NULL);
@@ -394,11 +412,12 @@ Node* findMin(std::vector<Node*> list) {
 }
 
 // Uses A* algorithm to calculate best path from start Node struct to goal Node struct
-std::vector<Node*> pathfind(Node start, Node goal) {
+std::vector<Node*> pathfind(Node start, Node goal, int (*heuristic)(Node)) {
     std::vector<Node*> openSet;
     std::vector<Pos> closedSet;
     start.g = 0;
-    start.f = heuristic(start);
+    //start.f = heuristic2(start);
+    start.f = (*heuristic)(start);
     openSet.push_back(&start);
     while (!openSet.empty()) {
         Node* current = findMin(openSet);
@@ -448,9 +467,59 @@ std::vector<Node*> pathfind(Node start, Node goal) {
 // Calculates path to player for each enemy on map and moves them one step closer to player
 void enemyAI() {
     for (Pos* pos : enemyPos) {
-        std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL});
-        if (!list.empty())
-            changePos(pos, list[1]->r, list[1]->c, false);
+        int dist = std::abs(playerPos->r - pos->r) + std::abs(playerPos->c - pos->c) / 2;
+        if (dist > 4 && dist < 9)
+            continue;
+        double vC = (pos->c - playerPos->c) / 2.0;
+        double vR = pos->r - playerPos->r;
+        double magV = std::sqrt(vC * vC + vR * vR);
+        int aC = (int)std::round(playerPos->c + vC / magV * 8) / 2 * 2;
+        int aR = (int)std::round(playerPos->r + vR / magV * 4);
+        reset();
+        printf("                                        ");
+        reset();
+        std::cout << pos->r << "," << playerPos->r << "," << aC << "," << aR << "\n";
+        if (aC <= 0 || aC >= cols - 2) {
+            if (aR <= 1) {
+                aR = 2;
+            } else if (aR >= rows - 2) {
+                aR = rows - 3;
+            } else {
+                aR += playerPos->r > pos->r ? -1 : (playerPos->r < pos->r ? 1 : (std::rand() % 2 == 0 ? -1 : 1));
+            }
+            aC = aC <= 0 ? 2 : (cols - 4);
+        } else if (aR <= 0 || aR >= rows - 1) {
+            if (aC >= cols - 4) {
+                aC = cols - 6;
+            } else if (aC <= 2) {
+                aC = 4;
+            } else {
+                aC += playerPos->c > pos->c ? -2 : (playerPos->c < pos->c ? 2 : (std::rand() % 2 == 0 ? -2 : 2));
+            }
+            aR = aR <= 0 ? 1 : (rows - 2);
+        }
+        std::cout << vC << "," << vR << "," << magV << "," << aC << "," << aR;
+        //Sleep(2000);
+        //getch();
+        //std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL}, &heuristic);
+        std::vector<Node*> list = pathfind({pos->r, pos->c, INT_MAX, INT_MAX, NULL}, {(int)std::round(aR), (int)std::round(aC) / 2 * 2, 0, 0, NULL}, &heuristic2);
+        //if (!list.empty())
+        /*reset();
+        std::cout << list.size();
+        getch();
+        reset();
+        printf("       ");*/
+        if (list.size() >= 2) {
+            /*if (list[1]->r == pos->r && list[1]->c == pos->c) {
+                if (pos->c == 0) {
+                    if (pos->r == 0) {
+                        changePos(pos, 1, 0, false);
+                    }
+                }
+            } else {*/
+                changePos(pos, list[1]->r, list[1]->c, false);
+            //}
+        }
     }
 }
 

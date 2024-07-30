@@ -47,7 +47,7 @@ Node* nodeInit(int r, int c, int f, int g, Node* prev);
 std::vector<Node*> createPath(Node* current);
 int heuristic(Node node);
 Node* findMin(std::vector<Node*> list);
-std::vector<Node*> pathfind(Node start, Node goal);
+std::vector<Node*> pathfind(Node start, Node goal, int (*heuristic)(Node));
 void enemyAI();
 
 void updateSelection();
