@@ -28,8 +28,6 @@ int selection = 0;
 
 const int screenThreshold = 3;
 
-std::vector<Pos*> enemyPos;
-
 struct Node {
     int r, c, f, g;
     Node* prev;

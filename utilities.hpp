@@ -26,8 +26,12 @@ struct Pos {
     int r, c;
 
     bool operator==(Pos p) {
-        return (r == p.r && c == p.c);
+        return r == p.r && c == p.c;
     }
+
+    /*bool operator==(Pos* p) {
+        return r == p->r && c == p->c;
+    }*/
 };
 extern Pos* playerPos;
 

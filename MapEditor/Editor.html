@@ -505,7 +505,7 @@
                             <input
                                 value="${cell.value}"
                                 style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px;
-                                       color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : cell.fore)]};
+                                       color: ${colors[cell.isPlayer ? 5 : cell.fore]};
                                        background-color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : (cell.isNPC ? 9 : cell.back))]};"
                                 maxlength=1 class="cell" id="r${i}c${j}"
                                 onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"

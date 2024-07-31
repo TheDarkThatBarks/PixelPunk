@@ -86,7 +86,7 @@ void setColor(int val) {
 // Sets the console text color based on the type of the given cell
 void setColorCell(Cell c) {
     //SetConsoleTextAttribute(hConsole, ((c.isPlayer ? 5 : (c.isEnemy ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.isPlayer ? 5 : (c.isEnemy ? 12 : c.fore)));
-    SetConsoleTextAttribute(hConsole, ((c.type == '+' ? 5 : (c.type == '-' ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.type == '+' ? 5 : (c.type == '-' ? 12 : c.fore)));
+    SetConsoleTextAttribute(hConsole, ((c.type == '+' ? 5 : (c.type == '-' ? 12 : (c.isNPC ? 9 : c.back))) * 16) + (c.type == '+' ? 5 : c.fore));
 }
 
 // Resets the console cursor position and the console text color to default

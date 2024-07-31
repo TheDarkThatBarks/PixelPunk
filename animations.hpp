@@ -45,6 +45,12 @@ struct npcID {
 };
 extern std::vector<npcID> npcIDs;
 
+struct EnemyPos {
+    Pos* pos;
+    char type;
+};
+extern std::vector<EnemyPos*> enemyPos;
+
 void loadAnimation();
 void printScreen();
 void printCell(Pos pos, Pos coord);

@@ -21,6 +21,7 @@ std::vector<Pos> animChangeList;
 std::vector<Pos> redrawList;
 Reprint reprint;
 std::vector<npcID> npcIDs;
+std::vector<EnemyPos*> enemyPos;
 
 // Runs start animation
 void loadAnimation() {
@@ -57,12 +58,13 @@ void loadAnimation() {
 // Displays the section of the map contained within the screen bounds
 void printScreen() {
     for (int r = 0; r < screenSize; r++) {
-        setCursor(rOffset + r, cOffset);
+        //setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
-            Pos pos = screenToMap({r, c});
+            /*Pos pos = screenToMap({r, c});
             char val = frames[currFrame][pos.r][pos.c].value;
             setColorCell(frames[currFrame][pos.r][pos.c]);
-            printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);
+            printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);*/
+            printCell({r, c}, screenToMap({r, c}));
         }
     }
 }
@@ -72,6 +74,18 @@ void printCell(Pos pos, Pos coord) {
     setCursor(rOffset + coord.r, cOffset + coord.c);
     setColorCell(frames[currFrame][pos.r][pos.c]);
     char val = frames[currFrame][pos.r][pos.c].value;
+    if (frames[currFrame][pos.r][pos.c / 2 * 2].type == '-') {
+        for (EnemyPos* enemy : enemyPos) {
+            if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
+                val = enemy->type;
+                reset();
+                printf("%c", val);
+                setCursor(rOffset + coord.r, cOffset + coord.c);
+                setColorCell(frames[currFrame][pos.r][pos.c]);
+                break;
+            }
+        }
+    }
     printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
 }
 
