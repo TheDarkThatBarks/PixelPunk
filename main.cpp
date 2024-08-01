@@ -25,6 +25,7 @@ int main() {
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
+    //std::wcout << L"⎽⎼⎻⎺";
     std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
     std::srand(std::time(0));
@@ -244,36 +245,24 @@ void changePos(Pos* pos, int newR, int newC, bool player) {
 
 // Creates a line of '.' from given start position to player
 void shoot(int startR, int startC) {
-    int diffC = std::floor(startC - (playerPos->c + 2));
+    bool toTheRight = startC >= playerPos->c + 2;
+    bool usingCol = toTheRight || startC + 2 <= playerPos->c;
+    std::vector<Projectile> list;
+
+    startC += usingCol ? (toTheRight ? -1 : 2) : 0;
+    startR += usingCol ? 0 : (playerPos->r > startR ? 1 : -1);
+
+    int diffC = std::floor(startC - (playerPos->c + (toTheRight ? 2 : -1)));
     int diffR = std::floor(startR - playerPos->r);
     float slope = (float)diffR / diffC;
-    /*reset();
-    std::cout << diffR << "," << diffC << "," << slope << "\n" << screenPos.r << "," << screenSize << "," << screenSize / 2.0 << "," << playerPos->r;
-    getch();*/
-    bool toTheRight = startC >= playerPos->c + 2;
-    bool usingCol = toTheRight || startC < playerPos->c;
-    std::vector<Pos> list;
     for (int i = usingCol ? startC : startR;
          (usingCol && (i >= playerPos->c + 2 || i < playerPos->c)) || (!usingCol && (i < playerPos->r || i > playerPos->r));
          (usingCol && toTheRight) || (!usingCol && startR > playerPos->r) ? i-- : i++) {
-        int r = (usingCol ? startR + (int)std::round(slope * (i - (toTheRight ? startC : 0))) : i);
+        int r = (usingCol ? startR + (int)std::round(slope * (i - startC/*(toTheRight ? startC : 0)*/)) : i);
         int c = usingCol ? i : startC;
-        setCursor(rOffset + r, cOffset + c);
-        setColor(0);
-        printf(".");
-        list.push_back({r, c});
-        if (list.size() > 5) {
-            printCell(screenToMap(list[0]), list[0]);
-            list.erase(list.begin());
-        }
-        Sleep(10);
-        //getch();
+        list.push_back({mapToScreen({r, c}), '-'});
     }
-    while (!list.empty()) {
-        printCell(screenToMap(list[0]), list[0]);
-        list.erase(list.begin());
-        Sleep(10);
-    }
+    projectileList.insert(projectileList.end(), list.begin(), list.end());
 }
 
 // Core game loop, checks for keyboard input and also handles animation frames
@@ -369,8 +358,8 @@ void keyPress() {
             currFrame = -currFrame + 1;
             for (Pos pos : animChangeList) {
                 if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                    Pos screenCoord = mapToScreen(pos);
-                    printCell(pos, screenCoord);
+                    //Pos screenCoord = mapToScreen(pos);
+                    printCell(pos, mapToScreen(pos));
                 }
             }
             reset();
@@ -473,6 +462,8 @@ std::vector<Node*> pathfind(Node start, Node goal, int (*heuristic)(Node)) {
     return std::vector<Node*>();
 }
 
+int count = 0;
+
 // Calculates path to player for each enemy on map and moves them one step closer to player
 void enemyAI() {
     for (EnemyPos* enemy : enemyPos) {
@@ -481,8 +472,11 @@ void enemyAI() {
             list = pathfind({enemy->pos->r, enemy->pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL}, &heuristic);
         } else if (enemy->type == '!') {
             int dist = std::abs(playerPos->r - enemy->pos->r) + std::abs(playerPos->c - enemy->pos->c) / 2;
-            if (dist > 4 && dist < 9) {
-                shoot(enemy->pos->r, enemy->pos->c - 1);
+            if (dist > 4 && dist < 8) {
+                shoot(enemy->pos->r, enemy->pos->c);
+                count++;
+                reset();
+                std::cout << "         SHOOT" << count;
                 continue;
             }
             double vC = (enemy->pos->c - playerPos->c) / 2.0;
@@ -490,10 +484,10 @@ void enemyAI() {
             double magV = std::sqrt(vC * vC + vR * vR);
             int aC = (int)std::round(playerPos->c + vC / magV * 8) / 2 * 2;
             int aR = (int)std::round(playerPos->r + vR / magV * 4);
-            reset();
+            /*reset();
             printf("                                        ");
             reset();
-            std::cout << enemy->pos->r << "," << playerPos->r << "," << aC << "," << aR << "\n";
+            std::cout << enemy->pos->r << "," << playerPos->r << "," << aC << "," << aR << "\n";*/
             if (aC <= 0 || aC >= cols - 2) {
                 if (aR <= 1) {
                     aR = 2;
@@ -513,9 +507,15 @@ void enemyAI() {
                 }
                 aR = aR <= 0 ? 1 : (rows - 2);
             }
-            std::cout << vC << "," << vR << "," << magV << "," << aC << "," << aR;
+            //std::cout << vC << "," << vR << "," << magV << "," << aC << "," << aR;
             //Sleep(2000);
             //getch();
+            /*reset();
+            std::cout << enemy->pos->r << "," << enemy->pos->c << "," << aR << "," << aC;*/
+            if (*(enemy->pos) == (Pos){aR, aC}) {
+                shoot(enemy->pos->r, enemy->pos->c);
+                continue;
+            }
             list = pathfind({enemy->pos->r, enemy->pos->c, INT_MAX, INT_MAX, NULL}, {aR, aC, 0, 0, NULL}, &heuristic2);
             /*reset();
             std::cout << list.size();
@@ -524,12 +524,9 @@ void enemyAI() {
             printf("       ");*/
         }
         if (list.size() >= 2) {
-            /*if (list[1]->r == pos->r && list[1]->c == pos->c) {
-                if (pos->c == 0) {
-                    if (pos->r == 0) {
-                        changePos(pos, 1, 0, false);
-                    }
-                }
+            /*if (list[1]->r == enemy->pos->r && list[1]->c == enemy->pos->c) {
+                reset();
+                std::cout << "DEBUG";
             } else {*/
                 changePos(enemy->pos, list[1]->r, list[1]->c, false);
             //}

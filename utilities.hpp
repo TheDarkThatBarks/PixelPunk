@@ -50,6 +50,11 @@ struct Cell {
     }
 };
 
+struct Projectile {
+    Pos coord;
+    char ch;
+};
+
 extern std::vector<std::vector<Cell>> frames[2];
 extern std::vector<std::vector<int>> mapCoord;
 extern std::vector<std::string> mapText;

@@ -19,6 +19,7 @@ int currFrame = 0;
 std::vector<Pos> animChangeList;
 
 std::vector<Pos> redrawList;
+std::vector<Projectile> projectileList;
 Reprint reprint;
 std::vector<npcID> npcIDs;
 std::vector<EnemyPos*> enemyPos;
@@ -125,6 +126,16 @@ void updateScreen(int dir) {
         }
         reprint.reprint = false;
     }
+    for (Projectile projectile : projectileList) {
+        setCursor(rOffset + projectile.coord.r, cOffset + projectile.coord.c);
+        setColor(0);
+        printf("%c", projectile.ch);
+        //Sleep(10);
+    }
+    Sleep(250);
+    for (Projectile projectile : projectileList)
+        printCell(screenToMap(projectile.coord), projectile.coord);
+    projectileList.clear();
 }
 
 // Prints the box outline of the screen

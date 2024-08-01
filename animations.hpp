@@ -32,6 +32,7 @@ extern int currFrame;
 extern std::vector<Pos> animChangeList;
 
 extern std::vector<Pos> redrawList;
+extern std::vector<Projectile> projectileList;
 struct Reprint {
     bool reprint;
     int rChange;
