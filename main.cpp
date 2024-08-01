@@ -35,6 +35,7 @@ int main() {
     printMenu(1);
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
+    //getch();
 }
 
 // Initializes a Cell struct
@@ -246,9 +247,9 @@ void shoot(int startR, int startC) {
     int diffC = std::floor(startC - (playerPos->c + 2));
     int diffR = std::floor(startR - playerPos->r);
     float slope = (float)diffR / diffC;
-    reset();
+    /*reset();
     std::cout << diffR << "," << diffC << "," << slope << "\n" << screenPos.r << "," << screenSize << "," << screenSize / 2.0 << "," << playerPos->r;
-    getch();
+    getch();*/
     bool toTheRight = startC >= playerPos->c + 2;
     bool usingCol = toTheRight || startC < playerPos->c;
     std::vector<Pos> list;
@@ -258,6 +259,7 @@ void shoot(int startR, int startC) {
         int r = (usingCol ? startR + (int)std::round(slope * (i - (toTheRight ? startC : 0))) : i);
         int c = usingCol ? i : startC;
         setCursor(rOffset + r, cOffset + c);
+        setColor(0);
         printf(".");
         list.push_back({r, c});
         if (list.size() > 5) {
@@ -479,8 +481,10 @@ void enemyAI() {
             list = pathfind({enemy->pos->r, enemy->pos->c, INT_MAX, INT_MAX, NULL}, {playerPos->r, playerPos->c, 0, 0, NULL}, &heuristic);
         } else if (enemy->type == '!') {
             int dist = std::abs(playerPos->r - enemy->pos->r) + std::abs(playerPos->c - enemy->pos->c) / 2;
-            if (dist > 4 && dist < 9)
+            if (dist > 4 && dist < 9) {
+                shoot(enemy->pos->r, enemy->pos->c - 1);
                 continue;
+            }
             double vC = (enemy->pos->c - playerPos->c) / 2.0;
             double vR = enemy->pos->r - playerPos->r;
             double magV = std::sqrt(vC * vC + vR * vR);

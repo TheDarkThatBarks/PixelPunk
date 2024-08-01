@@ -64,7 +64,7 @@ void printScreen() {
             char val = frames[currFrame][pos.r][pos.c].value;
             setColorCell(frames[currFrame][pos.r][pos.c]);
             printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);*/
-            printCell({r, c}, screenToMap({r, c}));
+            printCell(screenToMap({r, c}), {r, c});
         }
     }
 }
@@ -78,10 +78,10 @@ void printCell(Pos pos, Pos coord) {
         for (EnemyPos* enemy : enemyPos) {
             if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
                 val = enemy->type;
-                reset();
+                /*reset();
                 printf("%c", val);
                 setCursor(rOffset + coord.r, cOffset + coord.c);
-                setColorCell(frames[currFrame][pos.r][pos.c]);
+                setColorCell(frames[currFrame][pos.r][pos.c]);*/
                 break;
             }
         }
