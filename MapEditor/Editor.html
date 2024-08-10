@@ -123,8 +123,6 @@
         document.querySelector("#back-color").value = frames[currFrame][r][c].back;
         cell.focus();
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
-        document.querySelector("#player").checked = frames[currFrame][r][c].isPlayer;
-        document.querySelector("#npc").checked = frames[currFrame][r][c].isNPC;
         document.querySelector("#start").checked = frames[currFrame][r][c].isStart;
         const type = frames[currFrame][r][c].type;
         document.querySelector("#type").value = type;
@@ -353,7 +351,7 @@
     const changeType = function () {
         const type = document.querySelector("#type").value;
         if (type === "+" && selectedCells.length > 1) {
-            alert("Cannot have more than 1 player");
+            alert("Error: Cannot have more than 1 player");
             document.querySelector("#type").value = frames[currFrame][cursorCell.r][cursorCell.c].type;
             return;
         }
@@ -462,6 +460,11 @@
 
     // Sets the position of the screen start and changes the selected cell's isStart value
     const setStart = function (checked) {
+        if (selectedCells.length > 1) {
+            alert("Error: Cannot have more than 1 start position");
+            document.querySelector("#start").checked = false;
+            return;
+        }
         const col = Math.floor(cursorCell.c / 2) * 2;
         for (const frame of frames) {
             frame[cursorCell.r][col].isStart = checked;
@@ -681,10 +684,6 @@
     </select>
     <input id="npc-id" style="width: 50px" onclick="navigator.clipboard.writeText(this.value)" readonly>
     <br><br>
-    <input type="checkbox" id="player" onclick="setPlayer(this.checked)">
-    <label for="player">Player</label>
-    <input type="checkbox" id="npc" onclick="setNPC(this.checked)">
-    <label for="npc">NPC</label>
     <input type="checkbox" id="start" onclick="setStart(this.checked)">
     <label for="start">Screen Start</label>
     <br><br>
