@@ -30,10 +30,10 @@ int main() {
     _setmode(_fileno(stdout), _O_TEXT);*/
     std::srand(std::time(0));
     initMap(map);
-    //loadAnimation();
-    printBox();
+    loadAnimation();
+    /*printBox();
     printScreen();
-    printMenu(1);
+    printMenu(1);*/
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
     //getch();

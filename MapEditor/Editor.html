@@ -46,8 +46,11 @@
     let height = 0;
     let cellWidth = 20;
 
-    let cursorRow = 0;
-    let cursorCol = 0;
+    let cursorCell = {
+        r: -1,
+        c: -1
+    };
+    let selectedCells = [];
 
     let frames = [[], []];
     let currFrame = 0;
@@ -59,6 +62,9 @@
     let playing = false;
     let playInterval;
 
+    let controlClick = false;
+    let shiftClick = false;
+
     // Adds the functionality for using arrow keys to move from cell to cell
     document.addEventListener("keydown", (event) => {
         let arrow = true;
@@ -66,35 +72,55 @@
         let colChange = 0;
         switch (event.key) {
             case "ArrowUp":
-                rowChange = cursorRow === 0 ? 0 : -1;
+                rowChange = cursorCell.r === 0 ? 0 : -1;
                 break;
             case "ArrowDown":
-                rowChange = cursorRow === height - 1 ? 0 : 1;
+                rowChange = cursorCell.r === height - 1 ? 0 : 1;
                 break;
             case "ArrowLeft":
-                colChange = cursorCol === 0 ? 0 : -1;
+                colChange = cursorCell.c === 0 ? 0 : -1;
                 break;
             case "ArrowRight":
-                colChange = cursorCol === width - 1 ? 0 : 1;
+                colChange = cursorCell.c === width - 1 ? 0 : 1;
                 break;
             default:
                 arrow = false;
         }
         if (arrow) {
             event.preventDefault();
-            setCursorPos(cursorRow + rowChange, cursorCol + colChange);
+            if (event.ctrlKey || event.shiftKey) {
+                setVisualCursor(cursorCell.r + rowChange, cursorCell.c + colChange, true, false);
+                selectedCells.push({
+                    r: cursorCell.r,
+                    c: cursorCell.c
+                });
+                console.log(selectedCells);
+            } else {
+                setCursorPos(cursorCell.r + rowChange, cursorCell.c + colChange);
+            }
+        } else if (event.ctrlKey) {
+            controlClick = true;
+        } else if (event.shiftKey) {
+            shiftClick = true;
         }
     });
 
-    // Sets the stored cursor position to the given coordinates and updates all visual elements on the page accordingly
-    const setCursorPos = function (r, c) {
-        document.querySelector(`#r${cursorRow}c${cursorCol}`).parentElement.style.outline = "none";
-        cursorRow = r;
-        cursorCol = c;
+    document.addEventListener("keyup", (event) => {
+        if (event.key == "Control") {
+            controlClick = false;
+        } else if (event.key == "Shift") {
+            shiftClick = false;
+        }
+    });
+
+    const setVisualCursor = function (r, c, addOutline, removeLast) {
+        if (addOutline)
+            addCursorOutline(r, c, removeLast);
+        cursorCell.r = r;
+        cursorCell.c = c;
         const cell = document.querySelector(`#r${r}c${c}`);
         document.querySelector("#fore-color").value = frames[currFrame][r][c].fore;
         document.querySelector("#back-color").value = frames[currFrame][r][c].back;
-        cell.parentElement.style.outline = "2px solid " + WHITE;
         cell.focus();
         setTimeout(() => {cell.selectionStart = cell.selectionEnd = 10000;}, 0);
         document.querySelector("#player").checked = frames[currFrame][r][c].isPlayer;
@@ -107,6 +133,68 @@
         } else {
             document.querySelector("#npc-id").value = "";
         }
+    }
+
+    const addCursorOutline = function(r, c, removeLast) {
+        if (removeLast) {
+            for (const cell of selectedCells)
+                document.querySelector(`#r${cell.r}c${cell.c}`).parentElement.style.outline = "none";
+        }
+        document.querySelector(`#r${r}c${c}`).parentElement.style.outline = "2px solid " + WHITE;
+    }
+
+    // Sets the stored cursor position to the given coordinates and updates all visual elements on the page accordingly
+    const setCursorPos = function (r, c) {
+        setVisualCursor(r, c, true, !(controlClick || shiftClick));
+        if (controlClick) {
+            selectedCells.push({
+                r: r,
+                c: c
+            });
+        } else if (shiftClick) {
+            const rRange = [...Array(Math.abs(r - selectedCells.at(-1).r) + 1).keys()];
+            rRange.forEach((num, idx, arr) => {
+                if (r < selectedCells.at(-1).r) {
+                    arr[idx] += r;
+                } else if (r > selectedCells.at(-1).r) {
+                    arr[idx] += selectedCells.at(-1).r
+                } else {
+                    arr[idx] = r;
+                }
+            });
+            //console.log(r, selectedCells.at(-1).r, rRange);
+            let cRange = [...Array(Math.abs(c - selectedCells.at(-1).c) + 1).keys()];
+            cRange.forEach((num, idx, arr) => {
+                if (c < selectedCells.at(-1).c) {
+                    arr[idx] += c;
+                } else if (c > selectedCells.at(-1).c) {
+                    arr[idx] += selectedCells.at(-1).c;
+                } else {
+                    arr[idx] = c;
+                }
+            });
+            //console.log(c, selectedCells.at(-1).c, cRange);
+            for (i of rRange) {
+                for (j of cRange) {
+                    selectedCells.push({
+                        r: i,
+                        c: j
+                    });
+                    addCursorOutline(i, j, false);
+                }
+            }
+            cursorCell = {
+                r: r,
+                c: c
+            };
+            setVisualCursor(r, c, false, false);
+        } else {
+            selectedCells = [{
+                r: r,
+                c: c
+            }];
+        }
+        console.log(selectedCells);
     };
 
     // Creates the map table with the user provided height and width
@@ -126,7 +214,7 @@
                             <input
                                 style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px"
                                 maxlength=1 class="cell" id="r${i}c${j}"
-                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
+                                onclick="setCursorPos(${i}, ${j})" oninput="changeVal(this.value)"
                             >
                         </td>`;
                 for (const frame of frames)
@@ -189,23 +277,26 @@
 
     // Changes the stored value at coordinates on the map of the selected cell
     // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
-    const changeVal = function (r, c) {
-        const val = document.querySelector(`#r${r}c${c}`).value;
-        if (frames[currFrame][r][c].isEnemy || frames[currFrame][r][c].isNPC) {
-            const col = Math.floor(c / 2) * 2;
-            for (const frame of frames) {
-                frame[r][col].value = val;
-                frame[r][col + 1].value = val;
+    const changeVal = function (val) {
+        for (const cell of selectedCells) {
+            //const val = document.querySelector(`#r${cell.r}c${cell.c}`).value;
+            if (frames[currFrame][cell.r][cell.c].isEnemy || frames[currFrame][cell.r][cell.c].isNPC) {
+                const col = Math.floor(cell.c / 2) * 2;
+                for (const frame of frames) {
+                    frame[cell.r][col].value = val;
+                    frame[cell.r][col + 1].value = val;
+                }
+                document.querySelector(`#r${cell.r}c${col}`).value = val;
+                document.querySelector(`#r${cell.r}c${col + 1}`).value = val;
+                if (frames[currFrame][cell.r][cell.c].isNPC) {
+                    const npcID = npcIDs.find((e) => e.r == cell.r && e.c == col);
+                    npcID.id = (val || " ") + npcID.id.slice(1);
+                    document.querySelector("#npc-id").value = npcID.id;
+                }
+            } else {
+                frames[currFrame][cell.r][cell.c].value = val;
             }
-            document.querySelector(`#r${r}c${col}`).value = val;
-            document.querySelector(`#r${r}c${col + 1}`).value = val;
-            if (frames[currFrame][r][c].isNPC) {
-                const npcID = npcIDs.find((e) => e.r == r && e.c == col);
-                npcID.id = (val || " ") + npcID.id.slice(1);
-                document.querySelector("#npc-id").value = npcID.id;
-            }
-        } else {
-            frames[currFrame][r][c].value = val;
+            document.querySelector(`#r${cell.r}c${cell.c}`).value = val;
         }
         //console.log("changeVal", frames);
     };
@@ -214,23 +305,24 @@
     // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
     const changeForeColor = function () {
         const color = document.querySelector("#fore-color").value;
-        if (frames[currFrame][cursorRow][cursorCol].isEnemy || frames[currFrame][cursorRow][cursorCol].isNPC) {
-            const col = Math.floor(cursorCol / 2) * 2;
-            for (const frame of frames) {
-                frame[cursorRow][col].fore = parseInt(color);
-                frame[cursorRow][col + 1].fore = parseInt(color);
+        for (const cell of selectedCells) {
+            if (frames[currFrame][cell.r][cell.c].isEnemy || frames[currFrame][cell.r][cell.c].isNPC) {
+                const col = Math.floor(cell.c / 2) * 2;
+                for (const frame of frames) {
+                    frame[cell.r][col].fore = parseInt(color);
+                    frame[cell.r][col + 1].fore = parseInt(color);
+                }
+                document.querySelector(`#r${cell.r}c${col}`).style.color = colors[color];
+                document.querySelector(`#r${cell.r}c${col + 1}`).style.color = colors[color];
+                if (frames[currFrame][cell.r][cell.c].isNPC) {
+                    const npcID = npcIDs.find((e) => e.r == cell.r && e.c == col);
+                    npcID.id = npcID.id[0] + parseInt(color).toString(16) + npcID.id[2];
+                    document.querySelector("#npc-id").value = npcID.id;
+                }
+            } else {
+                document.querySelector(`#r${cell.r}c${cell.c}`).style.color = colors[color];
+                frames[currFrame][cell.r][cell.c].fore = parseInt(color);
             }
-            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[color];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[color];
-            if (frames[currFrame][cursorRow][cursorCol].isNPC) {
-                const npcID = npcIDs.find((e) => e.r == cursorRow && e.c == col);
-                npcID.id = npcID.id[0] + parseInt(color).toString(16) + npcID.id[2];
-                document.querySelector("#npc-id").value = npcID.id;
-            }
-        } else {
-            const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
-            cell.style.color = colors[color];
-            frames[currFrame][cursorRow][cursorCol].fore = parseInt(color);
         }
         //console.log(frames);
     };
@@ -239,55 +331,63 @@
     // If the changed cell is part of an NPC, changes the stored NPC ID accordingly
     const changeBackColor = function () {
         const color = document.querySelector("#back-color").value;
-        if (frames[currFrame][cursorRow][cursorCol].isNPC) {
-            const col = Math.floor(cursorCol / 2) * 2;
-            for (const frame of frames) {
-                frame[cursorRow][col].back = parseInt(color);
-                frame[cursorRow][col + 1].back = parseInt(color);
+        for (const cell of selectedCells) {
+            if (frames[currFrame][cell.r][cell.c].isNPC) {
+                const col = Math.floor(cell.c / 2) * 2;
+                for (const frame of frames) {
+                    frame[cell.r][col].back = parseInt(color);
+                    frame[cell.r][col + 1].back = parseInt(color);
+                }
+                const npcID = npcIDs.find((e) => e.r == cell.r && e.c == col);
+                npcID.id = npcID.id.slice(0, 2) + parseInt(color).toString(16);
+                document.querySelector("#npc-id").value = npcID.id;
+            } else {
+                document.querySelector(`#r${cell.r}c${cell.c}`).style.backgroundColor = colors[color];
+                frames[currFrame][cell.r][cell.c].back = parseInt(color);
             }
-            const npcID = npcIDs.find((e) => e.r == cursorRow && e.c == col);
-            npcID.id = npcID.id.slice(0, 2) + parseInt(color).toString(16);
-            document.querySelector("#npc-id").value = npcID.id;
-        } else {
-            const cell = document.querySelector(`#r${cursorRow}c${cursorCol}`);
-            cell.style.backgroundColor = colors[color];
-            frames[currFrame][cursorRow][cursorCol].back = parseInt(color);
         }
         //console.log(frames);
     };
 
     // Changes the type of the selected cell
     const changeType = function () {
-        const col = Math.floor(cursorCol / 2) * 2;
         const type = document.querySelector("#type").value;
-        const oldType = frames[currFrame][cursorRow][col].type;
-        if (oldType === "+") {
-            setPlayer(false);
-        } else if (oldType === "!") {
-            setNPC(false);
-        } else if (oldType === "-") {
-            setEnemy(false);
+        if (type === "+" && selectedCells.length > 1) {
+            alert("Cannot have more than 1 player");
+            document.querySelector("#type").value = frames[currFrame][cursorCell.r][cursorCell.c].type;
+            return;
         }
-        if (type === "+") {
-            setPlayer(true);
-        } else if (type === "!") {
-            setNPC(true);
-        } else if (type === "-") {
-            setEnemy(true);
-        }
-        for (const frame of frames) {
-            for (let i = 0; i < 2; i++)
-                frame[cursorRow][col + i].type = type;
+        for (const cell of selectedCells) {
+            const col = Math.floor(cell.c / 2) * 2;
+            const oldType = frames[currFrame][cell.r][col].type;
+            if (oldType === "+") {
+                setPlayer(false);
+            } else if (oldType === "!") {
+                setNPC(cell.r, cell.c, false);
+            } else if (oldType === "-") {
+                setEnemy(cell.r, cell.c, false);
+            }
+            if (type === "+") {
+                setPlayer(true);
+            } else if (type === "!") {
+                setNPC(cell.r, cell.c, true);
+            } else if (type === "-") {
+                setEnemy(cell.r, cell.c, true);
+            }
+            for (const frame of frames) {
+                for (let i = 0; i < 2; i++)
+                    frame[cell.r][col + i].type = type;
+            }
         }
         console.log("changeType", frames);
     };
 
     // Sets the position of the player and changes the selected cell's visual fore- and back-ground colors accordingly, and changes the cell's type
     const setPlayer = function (checked) {
-        const col = Math.floor(cursorCol / 2) * 2;
+        const col = Math.floor(cursorCell.c / 2) * 2;
         for (const frame of frames) {
-            frame[cursorRow][col].isPlayer = checked;
-            frame[cursorRow][col + 1].isPlayer = checked;
+            frame[cursorCell.r][col].isPlayer = checked;
+            frame[cursorCell.r][col + 1].isPlayer = checked;
         }
         //console.log(checked);
         if (currPlayer[0] !== -1) {
@@ -304,11 +404,11 @@
             document.querySelector(`#r${currPlayer[0]}c${currPlayer[1] + 1}`).style.backgroundColor = colors[cell2.back];
         }
         if (checked) {
-            document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[5];
-            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[5];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[5];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[5];
-            currPlayer = [cursorRow, col];
+            document.querySelector(`#r${cursorCell.r}c${col}`).style.color = colors[5];
+            document.querySelector(`#r${cursorCell.r}c${col}`).style.backgroundColor = colors[5];
+            document.querySelector(`#r${cursorCell.r}c${col + 1}`).style.color = colors[5];
+            document.querySelector(`#r${cursorCell.r}c${col + 1}`).style.backgroundColor = colors[5];
+            currPlayer = [cursorCell.r, col];
         } else {
             currPlayer = [-1, -1];
         }
@@ -316,64 +416,62 @@
     };
 
     // Changes the selected cell's visual fore- and back-ground colors accordingly, and changes the cell's type
-    const setEnemy = function (checked) {
-        const col = Math.floor(cursorCol / 2) * 2;
+    const setEnemy = function (r, c, checked) {
+        const col = Math.floor(c / 2) * 2;
         for (const frame of frames) {
-            frame[cursorRow][col].isEnemy = checked;
-            frame[cursorRow][col + 1].isEnemy = checked;
+            frame[r][col].isEnemy = checked;
+            frame[r][col + 1].isEnemy = checked;
         }
         if (checked) {
-            //document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[12];
-            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[12];
-            //document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[12];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[12];
+            document.querySelector(`#r${r}c${col}`).style.backgroundColor = colors[12];
+            document.querySelector(`#r${r}c${col + 1}`).style.backgroundColor = colors[12];
         } else {
-            const cell1 = frames[currFrame][cursorRow][col];
-            const cell2 = frames[currFrame][cursorRow][col + 1];
-            //document.querySelector(`#r${cursorRow}c${col}`).style.color = colors[cell1.fore];
-            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
-            //document.querySelector(`#r${cursorRow}c${col + 1}`).style.color = colors[cell2.fore];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
+            const cell1 = frames[currFrame][r][col];
+            const cell2 = frames[currFrame][r][col + 1];
+            document.querySelector(`#r${r}c${col}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${r}c${col + 1}`).style.backgroundColor = colors[cell2.back];
         }
     };
 
     // Changes the selected cell's visual background color accordingly, and changes the cell's type
     // Also records the coordinates of the NPC and creates its ID and stores both in the npcIDs list
-    const setNPC = function (checked) {
-        const col = Math.floor(cursorCol / 2) * 2;
+    const setNPC = function (r, c, checked) {
+        const col = Math.floor(c / 2) * 2;
         for (const frame of frames) {
-            frame[cursorRow][col].isNPC = checked;
-            frame[cursorRow][col + 1].isNPC = checked;
+            frame[r][col].isNPC = checked;
+            frame[r][col + 1].isNPC = checked;
         }
         if (checked) {
-            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[9];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[9];
+            document.querySelector(`#r${r}c${col}`).style.backgroundColor = colors[9];
+            document.querySelector(`#r${r}c${col + 1}`).style.backgroundColor = colors[9];
+            const id = (frames[currFrame][r][col].value || " ") + frames[currFrame][r][col].fore.toString(16) + frames[currFrame][r][col].back.toString(16);
             npcIDs.push({
-                r: cursorRow,
+                r: r,
                 c: col,
-                id: (frames[currFrame][cursorRow][col].value || " ") + frames[currFrame][cursorRow][col].fore.toString(16) + frames[currFrame][cursorRow][col].back.toString(16)
+                id: id
             });
+            document.querySelector("#npc-id").value = id;
         } else {
-            const cell1 = frames[currFrame][cursorRow][col];
-            const cell2 = frames[currFrame][cursorRow][col + 1];
-            document.querySelector(`#r${cursorRow}c${col}`).style.backgroundColor = colors[cell1.back];
-            document.querySelector(`#r${cursorRow}c${col + 1}`).style.backgroundColor = colors[cell2.back];
-            npcIDs.splice(npcIDs.findIndex((e) => e.r == cursorRow && e.c == col), 1);
+            const cell1 = frames[currFrame][r][col];
+            const cell2 = frames[currFrame][r][col + 1];
+            document.querySelector(`#r${r}c${col}`).style.backgroundColor = colors[cell1.back];
+            document.querySelector(`#r${r}c${col + 1}`).style.backgroundColor = colors[cell2.back];
+            npcIDs.splice(npcIDs.findIndex((e) => e.r == r && e.c == col), 1);
         }
     };
 
     // Sets the position of the screen start and changes the selected cell's isStart value
     const setStart = function (checked) {
-        const col = Math.floor(cursorCol / 2) * 2;
+        const col = Math.floor(cursorCell.c / 2) * 2;
         for (const frame of frames) {
-            frame[cursorRow][col].isStart = checked;
-            frame[cursorRow][col + 1].isStart = checked;
+            frame[cursorCell.r][col].isStart = checked;
+            frame[cursorCell.r][col + 1].isStart = checked;
             if (currStart[0] !== -1) {
                 frame[currStart[0]][currStart[1]].isStart = false;
                 frame[currStart[0]][currStart[1] + 1].isStart = false;
             }
         }
-        currStart = checked ? [cursorRow, col] : [-1, -1];
+        currStart = checked ? [cursorCell.r, col] : [-1, -1];
     };
 
     // Saves the map into an encoded string
@@ -486,8 +584,8 @@
             //console.log('|', c);
             if (lastCell !== "" && lastCell.type !== '*')
                 frames[1][r].push(JSON.parse(JSON.stringify(lastCell)));
-            cursorRow = 0;
-            cursorCol = 0;
+            cursorCell.r = 0;
+            cursorCell.c = 0;
         }
         console.log("load", frames);
 
@@ -508,21 +606,24 @@
                                        color: ${colors[cell.isPlayer ? 5 : cell.fore]};
                                        background-color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : (cell.isNPC ? 9 : cell.back))]};"
                                 maxlength=1 class="cell" id="r${i}c${j}"
-                                onfocus="setCursorPos(${i}, ${j})" oninput="changeVal(${i}, ${j})"
+                                onclick="setCursorPos(${i}, ${j})" oninput="changeVal(this.value)"
                             >
                         </td>`;
             }
             table.innerHTML += str + "</tr>";
         }
-        setCursorPos(cursorRow, cursorCol);
+        for (const cell of selectedCells)
+            addCursorOutline(cell.r, cell.c, false);
     };
 </script>
 
 <body style="background-color: rgb(12, 12, 12)">
-    <input type="number" placeholder="Width" id="width">
-    <input type="number" placeholder="Height" id="height">
-    <button onclick="createTable();">Generate Table</button>
-    <br><br>
+    <form>
+        <input type="number" placeholder="Width" id="width">
+        <input type="number" placeholder="Height" id="height">
+        <button onclick="event.preventDefault(); createTable();">Generate Table</button>
+    </form>
+    <br>
     <label for="grid">Toggle Grid</label>
     <input type="checkbox" id="grid" onchange="setGrid(this.value)">
     <label for="size">Cell Width (Pixels)</label>
