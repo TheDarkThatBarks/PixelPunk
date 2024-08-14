@@ -17,6 +17,7 @@ std::string currentDialogue;
 
 int currFrame = 0;
 std::vector<Pos> animChangeList;
+//std::vector<Pos> animChangeList[FRAMES];
 
 std::vector<Pos> redrawList;
 std::vector<Projectile> projectileList;
@@ -70,24 +71,31 @@ void printScreen() {
     }
 }
 
-// Prints the cell at a position on the map at a coordinate on the screen
-void printCell(Pos pos, Pos coord) {
-    setCursor(rOffset + coord.r, cOffset + coord.c);
-    setColorCell(frames[currFrame][pos.r][pos.c]);
+//bool test = true;
+int lastFore = -1;
+int lastBack = -1;
+char lastType = '\0';
+
+char computePrintVal(Pos pos, Pos coord) {
     char val = frames[currFrame][pos.r][pos.c].value;
     if (frames[currFrame][pos.r][pos.c / 2 * 2].type == '-') {
         for (EnemyPos* enemy : enemyPos) {
             if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
                 val = enemy->type;
-                /*reset();
-                printf("%c", val);
-                setCursor(rOffset + coord.r, cOffset + coord.c);
-                setColorCell(frames[currFrame][pos.r][pos.c]);*/
                 break;
             }
         }
     }
-    printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
+    return coord.r == screenSize - 1 && val == ' ' ? '_' : val;
+}
+
+// Prints the cell at a position on the map at a coordinate on the screen
+void printCell(Pos pos, Pos coord) {
+    WORD color = computeColor(frames[currFrame][pos.r][pos.c]);
+    char buffer[] = {computePrintVal(pos, coord)};
+    DWORD written;
+    WriteConsoleOutputAttribute(hConsole, &color, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);
+    WriteConsoleOutputCharacterA(hConsole, buffer, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);
 }
 
 // Updates the screen after a player moves
@@ -96,6 +104,7 @@ void printCell(Pos pos, Pos coord) {
 // Otherwise, the screen is reprinted cell by cell
 // If the movement of the screen does not change a coordinate's appearance on the screen, it is not reprinted
 void updateScreen(int dir) {
+    auto start1 = std::chrono::system_clock::now();
     for (int i = 0; i < (int)redrawList.size(); i += reprint.reprint ? 2 : 1) {
         Pos pos = redrawList[i];
         if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
@@ -104,7 +113,9 @@ void updateScreen(int dir) {
                 printCell({pos.r, pos.c + i}, {screenCoord.r, screenCoord.c + i});
         }
     }
+    auto end1 = std::chrono::system_clock::now();
     redrawList.clear();
+    auto start2 = std::chrono::system_clock::now();
     if (reprint.reprint) {
         screenPos.r += reprint.rChange;
         screenPos.c += reprint.cChange;
@@ -126,6 +137,11 @@ void updateScreen(int dir) {
         }
         reprint.reprint = false;
     }
+    auto end2 = std::chrono::system_clock::now();
+    reset();
+    printf("                    \n                          ");
+    reset();
+    printf("%d\n%d", (end1 - start1).count(), (end2 - start2).count());
     for (Projectile projectile : projectileList) {
         setCursor(rOffset + projectile.coord.r, cOffset + projectile.coord.c);
         setColor(0);

@@ -3,6 +3,7 @@
 #include <vector>
 #include <windows.h>
 #include <string>
+#include <chrono>
 
 #define M_NPC 50
 #define M_PLAYER 1
@@ -12,6 +13,8 @@
 
 #define ORIGINAL_WINDOW_WIDTH 355
 #define ORIGINAL_WINDOW_HEIGHT 408
+
+#define FRAMES 2
 
 extern HANDLE hConsole;
 extern HWND console;
@@ -45,6 +48,10 @@ struct Cell {
     bool isNPC;
     bool isStart;
 
+    /*bool isEnemy() {
+        return type == '-';
+    }*/
+
     bool operator==(Cell c) {
         return c.type == type /*&& c.value == value && c.fore == fore && c.back == back && c.isPlayer == isPlayer && c.isEnemy == isEnemy*/;
     }
@@ -55,7 +62,7 @@ struct Projectile {
     char ch;
 };
 
-extern std::vector<std::vector<Cell>> frames[2];
+extern std::vector<std::vector<Cell>> frames[FRAMES];
 extern std::vector<std::vector<int>> mapCoord;
 extern std::vector<std::string> mapText;
 extern int textIndex;
@@ -69,5 +76,6 @@ void setCursor(short r, short c);
 void setColor(std::string background, std::string text);
 void setColor(int val);
 void setColorCell(Cell c);
+int computeColor(Cell c);
 void reset();
 void removeScrollbar();

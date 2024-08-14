@@ -7,7 +7,6 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>
-#include <chrono>
 
 #include "animations.hpp"
 
@@ -22,6 +21,7 @@
 
 #define MOVE 0
 #define MENU 1
+#define ATTACK 2
 
 int kbMode = MOVE;
 int selection = 0;

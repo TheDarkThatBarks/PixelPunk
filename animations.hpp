@@ -30,6 +30,7 @@ extern std::string map;
 
 extern int currFrame;
 extern std::vector<Pos> animChangeList;
+//extern std::vector<Pos> animChangeList[FRAMES];
 
 extern std::vector<Pos> redrawList;
 extern std::vector<Projectile> projectileList;
@@ -54,6 +55,7 @@ extern std::vector<EnemyPos*> enemyPos;
 
 void loadAnimation();
 void printScreen();
+char computePrintVal(Pos pos, Pos coord);
 void printCell(Pos pos, Pos coord);
 void updateScreen(int dir);
 void printBox();

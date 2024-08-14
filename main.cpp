@@ -20,7 +20,7 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("Maps/newMap4.txt");
+    std::ifstream m("Maps/map6.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -36,7 +36,51 @@ int main() {
     printMenu(1);*/
     //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
-    //getch();
+    
+    /*auto start1 = std::chrono::system_clock::now();
+    for (int n = 0; n < 1000; n++) {
+        currFrame = -currFrame + 1;
+        for (int i = 0; i < animChangeList.size(); i++) {
+            Pos pos = animChangeList[i];
+            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
+                int c = pos.c;
+                std::vector<WORD> colors;
+                colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
+                std::vector<char> buffer;
+                buffer.push_back(computePrintVal(pos, mapToScreen(pos)));
+                for (int j = 1; i + j < animChangeList.size(); j++) {
+                    if (animChangeList[i + j].r == pos.r && animChangeList[i + j].c == c + 1) {
+                        c++;
+                        colors.push_back(computeColor(frames[currFrame][pos.r][c]));
+                        buffer.push_back(computePrintVal({pos.r, c}, mapToScreen({pos.r, c})));
+                    } else {
+                        break;
+                    }
+                }
+                DWORD written;
+                WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                i += c - pos.c;
+            }
+        }
+    }
+    auto end1 = std::chrono::system_clock::now();
+    currFrame = 0;
+    clearScreen();
+    auto start2 = std::chrono::system_clock::now();
+    for (int n = 0; n < 1000; n++) {
+        currFrame = -currFrame + 1;
+        for (Pos pos : animChangeList) {
+            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
+                //Pos screenCoord = mapToScreen(pos);
+                printCell(pos, mapToScreen(pos));
+            }
+        }
+    }
+    auto end2 = std::chrono::system_clock::now();
+    reset();
+    std::cout << (end1 - start1).count() / 1000.0 << "\n" << (end2 - start2).count() / 1000.0;
+    getch();*/
 }
 
 // Initializes a Cell struct
@@ -136,10 +180,32 @@ void initMap(std::string map) {
         }
         start = false;
         if (type == '*') {
-            animChangeList.push_back({
+            /*animChangeList.push_back({
                 r,
                 (int)frames[0][r].size() - 1
-            });
+            });*/
+            if (animChangeList.empty()) {
+                animChangeList.push_back({
+                    r,
+                    (int)frames[0][r].size() - 1
+                });
+            } else {
+                for (int i = 0; i < animChangeList.size(); i++) {
+                    if ((animChangeList[i].r == r && animChangeList[i].c > (int)frames[0][r].size() - 1) || animChangeList[i].r > r) {
+                        animChangeList.insert(animChangeList.begin() + i, {
+                            r,
+                            (int)frames[0][r].size() - 1
+                        });
+                        break;
+                    } else if (i + 1 == animChangeList.size()) {
+                        animChangeList.push_back({
+                            r,
+                            (int)frames[0][r].size() - 1
+                        });
+                        break;
+                    }
+                }
+            }
             //cell.cell.type = lastCell.cell.type;
             cell.cell.isPlayer = lastCell.cell.isPlayer;
             cell.cell.isEnemy = lastCell.cell.isEnemy;
@@ -265,6 +331,24 @@ void shoot(int startR, int startC) {
     projectileList.insert(projectileList.end(), list.begin(), list.end());
 }
 
+void attack(Pos pos) {
+    if (frames[currFrame][pos.r][pos.c].type == '-') {
+        //EnemyPos* ePos = (EnemyPos*)malloc(sizeof(EnemyPos));
+        int idx = -1;
+        for (int i = 0; i < (int)enemyPos.size() && idx < 0; i++) {
+            if (*(enemyPos[i]->pos) == pos)
+                idx = i;
+        }
+        enemyPos.erase(enemyPos.begin() + idx);
+        frames[currFrame][pos.r][pos.c].type = ' ';
+        frames[currFrame][pos.r][pos.c + 1].type = ' ';
+        printCell(pos, mapToScreen(pos));
+        printCell({pos.r, pos.c + 1}, mapToScreen({pos.r, pos.c + 1}));
+    }
+}
+
+int moved = 0;
+
 // Core game loop, checks for keyboard input and also handles animation frames
 void keyPress() {
     int kbCode = 0;
@@ -274,7 +358,8 @@ void keyPress() {
         if (kbhit()) {
             kbCode = getch();
             if (kbMode == MOVE) {
-                if (kbCode == 0 || kbCode == 224) {
+                if (/*moved < 2 && */(kbCode == 0 || kbCode == 224)) {
+                    moved++;
                     int rChange = 0, cChange = 0;
                     int dir = -1;
                     switch (getch()) {
@@ -298,7 +383,10 @@ void keyPress() {
                     changePos(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
                     enemyAI();
                     updateScreen(dir);
-                } else if (kbCode == KB_SPACE) {
+                    while (kbhit())
+                        getch();
+                } else if (/*moved < 2 && */kbCode == KB_SPACE) {
+                    moved++;
                     enemyAI();
                     updateScreen(-1);
                 } else if (kbCode == KB_TAB) {
@@ -350,20 +438,65 @@ void keyPress() {
                     shoot(std::floor(screenPos.r + screenSize / 2.0), screenPos.c);
                     //shoot(screenPos.r, std::floor((screenPos.c + screenSize * 2) / 2));
                     //shoot(screenPos.r + screenSize - 1, std::floor((screenPos.c + screenSize * 2) / 2));
+                } else if (kbCode == KB_SPACE) {
+                    if (selection == 0) {
+                        kbMode = ATTACK;
+                        printMenu(0);
+                    }
                 }
+            } else if (kbMode == ATTACK) {
+                if (kbCode == 0 || kbCode == 224) {
+                    Pos attackPos = {playerPos->r, playerPos->c};
+                    switch (getch()) {
+                        case KB_UP:
+                            attackPos.r--;
+                            break;
+                        case KB_DOWN:
+                            attackPos.r++;
+                            break;
+                        case KB_LEFT:
+                            attackPos.c -= 2;
+                            break;
+                        case KB_RIGHT:
+                            attackPos.c += 2;
+                            break;
+                    }
+                    attack(attackPos);
+                }
+                kbMode = MOVE;
             }
         }
         elapsed += std::chrono::system_clock::now() - start;
         if (elapsed >= std::chrono::milliseconds(500)) {
             currFrame = -currFrame + 1;
-            for (Pos pos : animChangeList) {
+            //for (Pos pos : animChangeList) {
+            for (int i = 0; i < (int)animChangeList.size(); i++) {
+                Pos pos = animChangeList[i];
                 if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                    //Pos screenCoord = mapToScreen(pos);
-                    printCell(pos, mapToScreen(pos));
+                    //printCell(pos, mapToScreen(pos));
+                    int c = pos.c;
+                    std::vector<WORD> colors;
+                    colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
+                    std::vector<char> buffer;
+                    buffer.push_back(computePrintVal(pos, mapToScreen(pos)));
+                    for (int j = 1; i + j < (int)animChangeList.size(); j++) {
+                        if (animChangeList[i + j].r == pos.r && animChangeList[i + j].c == c + 1) {
+                            c++;
+                            colors.push_back(computeColor(frames[currFrame][pos.r][c]));
+                            buffer.push_back(computePrintVal({pos.r, c}, mapToScreen({pos.r, c})));
+                        } else {
+                            break;
+                        }
+                    }
+                    DWORD written;
+                    WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    i += c - pos.c;
                 }
             }
             reset();
             elapsed = std::chrono::duration<double>::zero();
+            moved = 0;
         }
     }
 }
