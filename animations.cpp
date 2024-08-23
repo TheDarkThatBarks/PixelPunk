@@ -91,11 +91,23 @@ char computePrintVal(Pos pos, Pos coord) {
 
 // Prints the cell at a position on the map at a coordinate on the screen
 void printCell(Pos pos, Pos coord) {
-    WORD color = computeColor(frames[currFrame][pos.r][pos.c]);
+    /*WORD color = computeColor(frames[currFrame][pos.r][pos.c]);
     char buffer[] = {computePrintVal(pos, coord)};
     DWORD written;
     WriteConsoleOutputAttribute(hConsole, &color, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);
-    WriteConsoleOutputCharacterA(hConsole, buffer, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);
+    WriteConsoleOutputCharacterA(hConsole, buffer, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);*/
+    setCursor(rOffset + coord.r, cOffset + coord.c);
+    setColorCell(frames[currFrame][pos.r][pos.c]);
+    char val = frames[currFrame][pos.r][pos.c].value;
+    if (frames[currFrame][pos.r][pos.c / 2 * 2].type == '-') {
+        for (EnemyPos* enemy : enemyPos) {
+            if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
+                val = enemy->type;
+                break;
+            }
+        }
+    }
+    printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
 }
 
 // Updates the screen after a player moves
@@ -113,8 +125,8 @@ void updateScreen(int dir) {
                 printCell({pos.r, pos.c + i}, {screenCoord.r, screenCoord.c + i});
         }
     }
-    auto end1 = std::chrono::system_clock::now();
     redrawList.clear();
+    auto end1 = std::chrono::system_clock::now();
     auto start2 = std::chrono::system_clock::now();
     if (reprint.reprint) {
         screenPos.r += reprint.rChange;
@@ -138,17 +150,15 @@ void updateScreen(int dir) {
         reprint.reprint = false;
     }
     auto end2 = std::chrono::system_clock::now();
-    reset();
-    printf("                    \n                          ");
-    reset();
-    printf("%d\n%d", (end1 - start1).count(), (end2 - start2).count());
+
     for (Projectile projectile : projectileList) {
         setCursor(rOffset + projectile.coord.r, cOffset + projectile.coord.c);
         setColor(0);
         printf("%c", projectile.ch);
         //Sleep(10);
     }
-    Sleep(250);
+    if (!projectileList.empty())
+        Sleep(250);
     for (Projectile projectile : projectileList)
         printCell(screenToMap(projectile.coord), projectile.coord);
     projectileList.clear();

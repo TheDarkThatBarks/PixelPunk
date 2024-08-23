@@ -1,22 +1,25 @@
 {
+    "windows": {
+        "options": {
+            "shell": {
+                "executable": "cmd.exe",
+                "args": [
+                    "/C",
+                    "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\Common7\\Tools\\VsDevCmd.bat\"",
+                    "&&"
+                ]
+            }
+        }
+    },
     "tasks": [
         {
-            "type": "cppbuild",
+            "type": "shell",
             "label": "C/C++: g++.exe build project",
-            "command": "C:\\MinGW\\bin\\g++.exe",
+            "command": "cl.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-Wall",
-                "-Wextra",
-                "-Wunused-but-set-parameter",
-                "-g",
-                "${workspaceRoot}\\main.o",
-                "${workspaceRoot}\\utilities.o",
-                "${workspaceRoot}\\animations.o",
-                "-lwinmm",
-                //"-std=gnu++11",
-                "-o",
-                "${workspaceRoot}\\main.exe"
+                "${workspaceRoot}\\main.obj",
+                "${workspaceRoot}\\utilities.obj",
+                "${workspaceRoot}\\animations.obj"
             ],
             "options": {
                 "cwd": "${workspaceRoot}"
@@ -29,45 +32,29 @@
                 "isDefault": true
             },
             "dependsOn": [
-                "main",
+                //"main",
                 "utilities",
-                "animations"
+                "animations",
+                "main"
             ]
         },
         {
-            "type": "cppbuild",
+            "type": "shell",
             "label": "main",
-            "command": "C:\\MinGW\\bin\\g++.exe",
+            "command": "cl.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-Wall",
-                "-Wextra",
-                "-Wunused-but-set-parameter",
-                "-g",
                 "${workspaceRoot}\\main.cpp",
-                "-c",
-                "-o",
-                "${workspaceRoot}\\main.o"
-            ],
-            "problemMatcher": [
-                "$gcc"
+                "-c"
             ],
             "group": "build"
         },
         {
-            "type": "cppbuild",
+            "type": "shell",
             "label": "utilities",
-            "command": "C:\\MinGW\\bin\\g++.exe",
+            "command": "cl.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-Wall",
-                "-Wextra",
-                "-Wunused-but-set-parameter",
-                "-g",
                 "${workspaceRoot}\\utilities.cpp",
-                "-c",
-                "-o",
-                "${workspaceRoot}\\utilities.o"
+                "-c"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -75,19 +62,12 @@
             "group": "build"
         },
         {
-            "type": "cppbuild",
+            "type": "shell",
             "label": "animations",
-            "command": "C:\\MinGW\\bin\\g++.exe",
+            "command": "cl.exe",
             "args": [
-                "-fdiagnostics-color=always",
-                "-Wall",
-                "-Wextra",
-                "-Wunused-but-set-parameter",
-                "-g",
                 "${workspaceRoot}\\animations.cpp",
-                "-c",
-                "-o",
-                "${workspaceRoot}\\animations.o"
+                "-c"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -106,7 +86,6 @@
                 "-g",
                 "${workspaceRoot}\\MapEditor\\mapEditor.cpp",
                 "-lwinmm",
-                //"-std=gnu++11",
                 "-o",
                 "${workspaceRoot}\\mapEditor.exe"
             ],

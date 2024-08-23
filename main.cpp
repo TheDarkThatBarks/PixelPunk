@@ -1,4 +1,5 @@
-#include "main.h"
+#pragma comment (lib, "User32.lib")
+#include "main.hpp"
 
 std::string map;
 std::vector<std::string> mapText;
@@ -35,52 +36,96 @@ int main() {
     printScreen();
     printMenu(1);*/
     //std::cout << playerPos->r << "," << playerPos->c;
-    keyPress();
-    
-    /*auto start1 = std::chrono::system_clock::now();
-    for (int n = 0; n < 1000; n++) {
-        currFrame = -currFrame + 1;
-        for (int i = 0; i < animChangeList.size(); i++) {
-            Pos pos = animChangeList[i];
-            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                int c = pos.c;
-                std::vector<WORD> colors;
-                colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
-                std::vector<char> buffer;
-                buffer.push_back(computePrintVal(pos, mapToScreen(pos)));
-                for (int j = 1; i + j < animChangeList.size(); j++) {
-                    if (animChangeList[i + j].r == pos.r && animChangeList[i + j].c == c + 1) {
-                        c++;
-                        colors.push_back(computeColor(frames[currFrame][pos.r][c]));
-                        buffer.push_back(computePrintVal({pos.r, c}, mapToScreen({pos.r, c})));
-                    } else {
+    //keyPress();
+    std::thread thr(animLoop);
+    gameLoop();
+    thr.join();
+    return 0;
+}
+
+bool quit = false;
+
+void gameLoop() {
+    int kbCode = 0;
+    while (kbCode != KB_ESCAPE) {
+        //auto start = std::chrono::system_clock::now();
+        if (kbhit()) {
+            kbCode = getch();
+            if (kbCode == 0 || kbCode == 224) {
+                int rChange = 0, cChange = 0;
+                int dir = -1;
+                switch (getch()) {
+                    case KB_UP:
+                        rChange--;
+                        dir = 0;
                         break;
-                    }
+                    case KB_DOWN:
+                        rChange++;
+                        dir = 1;
+                        break;
+                    case KB_LEFT:
+                        cChange--;
+                        dir = 2;
+                        break;
+                    case KB_RIGHT:
+                        cChange++;
+                        dir = 3;
+                        break;
                 }
-                DWORD written;
-                WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
-                WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
-                i += c - pos.c;
+                while (kbhit())
+                    getch();
+                changePos(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
+                enemyAI();
+                updateScreen(dir);
             }
         }
+        /*auto end = std::chrono::system_clock::now();
+        auto loopTime = end - start;
+        reset();
+        std::cout << "                         ";
+        reset();
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(loopTime).count();
+        if (loopTime < std::chrono::milliseconds(50))
+            Sleep(50 - std::chrono::duration_cast<std::chrono::milliseconds>(loopTime).count());*/
     }
-    auto end1 = std::chrono::system_clock::now();
-    currFrame = 0;
-    clearScreen();
-    auto start2 = std::chrono::system_clock::now();
-    for (int n = 0; n < 1000; n++) {
-        currFrame = -currFrame + 1;
-        for (Pos pos : animChangeList) {
-            if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                //Pos screenCoord = mapToScreen(pos);
-                printCell(pos, mapToScreen(pos));
+    quit = true;
+}
+
+void animLoop() {
+    std::chrono::duration<double> elapsed = std::chrono::duration<double>::zero();
+    while (!quit) {
+        auto start = std::chrono::system_clock::now();
+        if (elapsed >= std::chrono::milliseconds(500)) {
+            currFrame = -currFrame + 1;
+            for (int i = 0; i < (int)animChangeList.size(); i++) {
+                Pos pos = animChangeList[i];
+                if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
+                    int c = pos.c;
+                    std::vector<WORD> colors;
+                    colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
+                    std::vector<char> buffer;
+                    buffer.push_back(computePrintVal(pos, mapToScreen(pos)));
+                    for (int j = 1; i + j < (int)animChangeList.size(); j++) {
+                        if (animChangeList[i + j].r == pos.r && animChangeList[i + j].c == c + 1) {
+                            c++;
+                            colors.push_back(computeColor(frames[currFrame][pos.r][c]));
+                            buffer.push_back(computePrintVal({pos.r, c}, mapToScreen({pos.r, c})));
+                        } else {
+                            break;
+                        }
+                    }
+                    DWORD written;
+                    WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    i += c - pos.c;
+                }
             }
+            //reset();
+            elapsed = std::chrono::duration<double>::zero();
+        } else {
+            elapsed += std::chrono::system_clock::now() - start;
         }
     }
-    auto end2 = std::chrono::system_clock::now();
-    reset();
-    std::cout << (end1 - start1).count() / 1000.0 << "\n" << (end2 - start2).count() / 1000.0;
-    getch();*/
 }
 
 // Initializes a Cell struct
@@ -383,8 +428,8 @@ void keyPress() {
                     changePos(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
                     enemyAI();
                     updateScreen(dir);
-                    while (kbhit())
-                        getch();
+                    //while (kbhit())
+                    //    getch();
                 } else if (/*moved < 2 && */kbCode == KB_SPACE) {
                     moved++;
                     enemyAI();
@@ -473,8 +518,8 @@ void keyPress() {
             for (int i = 0; i < (int)animChangeList.size(); i++) {
                 Pos pos = animChangeList[i];
                 if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
-                    //printCell(pos, mapToScreen(pos));
-                    int c = pos.c;
+                    printCell(pos, mapToScreen(pos));
+                    /*int c = pos.c;
                     std::vector<WORD> colors;
                     colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
                     std::vector<char> buffer;
@@ -491,7 +536,7 @@ void keyPress() {
                     DWORD written;
                     WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
                     WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
-                    i += c - pos.c;
+                    i += c - pos.c;*/
                 }
             }
             reset();
@@ -645,7 +690,8 @@ void enemyAI() {
             //getch();
             /*reset();
             std::cout << enemy->pos->r << "," << enemy->pos->c << "," << aR << "," << aC;*/
-            if (*(enemy->pos) == (Pos){aR, aC}) {
+            Pos p = {aR, aC};
+            if (*(enemy->pos) == p) {
                 shoot(enemy->pos->r, enemy->pos->c);
                 continue;
             }

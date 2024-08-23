@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>
+#include <thread>
 
 #include "animations.hpp"
 
@@ -37,6 +38,8 @@ struct Node {
     }
 };
 
+void gameLoop();
+void animLoop();
 void initMap(std::string map);
 void changePos(Pos* pos, int newR, int newC, bool player);
 void keyPress();
