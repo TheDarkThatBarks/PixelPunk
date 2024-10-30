@@ -50,6 +50,7 @@ extern std::vector<npcID> npcIDs;
 struct EnemyPos {
     Pos* pos;
     char type;
+    EnemyPos(Pos* p, char t) : pos(p), type(t) {};
 };
 extern std::vector<EnemyPos*> enemyPos;
 

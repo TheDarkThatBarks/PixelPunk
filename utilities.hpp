@@ -27,6 +27,7 @@ extern int rows, cols;
 
 struct Pos {
     int r, c;
+    Pos(int R, int C) : r(R), c(C) {};
 
     bool operator==(Pos p) {
         return r == p.r && c == p.c;

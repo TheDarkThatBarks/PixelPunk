@@ -77,6 +77,38 @@ void gameLoop() {
                 changePos(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
                 enemyAI();
                 updateScreen(dir);
+            } else if (kbCode == 96 /* ` */) {
+                std::vector<float> times;
+                for (int n = 0; n < 1000000; n++) {
+                    auto start = std::chrono::system_clock::now();
+                    int rChange = 0, cChange = 0;
+                    int dir = std::rand() % 4;
+                    switch (dir) {
+                        case 0:
+                            rChange--;
+                            break;
+                        case 1:
+                            rChange++;
+                            break;
+                        case 2:
+                            cChange--;
+                            break;
+                        case 3:
+                            cChange++;
+                            break;
+                    }
+                    changePos(playerPos, playerPos->r + rChange, playerPos->c + cChange * 2, true);
+                    //enemyAI();
+                    updateScreen(dir);
+                    times.push_back(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start).count());
+                }
+                double sum = 0;
+                for (double t : times)
+                    sum += t;
+                reset();
+                std::cout << "                    ";
+                reset();
+                std::cout << (double)sum / (int)times.size();
             }
         }
         /*auto end = std::chrono::system_clock::now();
@@ -121,10 +153,13 @@ void animLoop() {
                 }
             }
             //reset();
+            //std::cout << "                     ";
+            //reset();
+            //std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
             elapsed = std::chrono::duration<double>::zero();
-        } else {
+        }// else {
             elapsed += std::chrono::system_clock::now() - start;
-        }
+        //}
     }
 }
 
@@ -267,19 +302,8 @@ void initMap(std::string map) {
                 playerPos->r = r;
                 playerPos->c = frames[0][r].size() - 1;
             }
-            if (cell.cell.isEnemy && frames[0][r][frames[0][r].size() - 2].type != '-') {
-                /*Pos* p = (Pos*)malloc(sizeof(Pos));
-                p->r = r;
-                p->c = frames[0][r].size() - 1;
-                enemyPos.push_back(p);*/
-                EnemyPos* eP = (EnemyPos*)malloc(sizeof(EnemyPos));
-                Pos* p = (Pos*)malloc(sizeof(Pos));
-                p->r = r;
-                p->c = frames[0][r].size() - 1;
-                eP->pos = p;
-                eP->type = cellStr[0];
-                enemyPos.push_back(eP);
-            }
+            if (cell.cell.isEnemy && frames[0][r][frames[0][r].size() - 2].type != '-')
+                enemyPos.push_back(new EnemyPos(new Pos(r, (int)frames[0][r].size() - 1), cellStr[0]));
             if (cell.cell.isStart && screenPos.r == -1) {
                 screenPos.r = r;
                 screenPos.c = frames[0][r].size() - 1;
@@ -579,7 +603,8 @@ int heuristic2(Node node) {
 
 // Finds minimum cost Node from given list
 Node* findMin(std::vector<Node*> list) {
-    Node* min = nodeInit(0, 0, INT_MAX, 0, NULL);
+    //Node* min = nodeInit(0, 0, INT_MAX, 0, NULL);
+    Node* min = new Node(0, 0, INT_MAX, 0, NULL);
     for (Node* n : list) {
         if (n->f < min->f)
             min = n;
@@ -613,7 +638,8 @@ std::vector<Node*> pathfind(Node start, Node goal, int (*heuristic)(Node)) {
             Pos p = {newR, newC};
             if (std::find(closedSet.begin(), closedSet.end(), p) != closedSet.end())
                 continue;
-            Node* neighbor = nodeInit(newR, newC, INT_MAX, INT_MAX, current);
+            //Node* neighbor = nodeInit(newR, newC, INT_MAX, INT_MAX, current);
+            Node* neighbor = new Node(newR, newC, INT_MAX, INT_MAX, current);
             for (Node* n : openSet) {
                 if (*n == *neighbor) {
                     neighbor = n;
@@ -622,7 +648,8 @@ std::vector<Node*> pathfind(Node start, Node goal, int (*heuristic)(Node)) {
             }
             int newG = current->g + 1;
             if (newG < neighbor->g) {
-                neighbor->prev = nodeInit(current->r, current->c, current->f, current->g, current->prev);
+                //neighbor->prev = nodeInit(current->r, current->c, current->f, current->g, current->prev);
+                neighbor->prev = new Node(current);
                 neighbor->g = newG;
                 neighbor->f = newG + heuristic(*neighbor);
                 bool in = false;

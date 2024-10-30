@@ -32,6 +32,8 @@ const int screenThreshold = 3;
 struct Node {
     int r, c, f, g;
     Node* prev;
+    Node(int R, int C, int F, int G, Node* p) : r(R), c(C), f(F), g(G), prev(p) {};
+    Node(Node* node) : r(node->r), c(node->c), f(node->f), g(node->g), prev(node->prev) {};
 
     bool operator==(Node n) {
         return (n.r == r && n.c == c);

@@ -17,7 +17,6 @@ std::string currentDialogue;
 
 int currFrame = 0;
 std::vector<Pos> animChangeList;
-//std::vector<Pos> animChangeList[FRAMES];
 
 std::vector<Pos> redrawList;
 std::vector<Projectile> projectileList;
@@ -60,27 +59,16 @@ void loadAnimation() {
 // Displays the section of the map contained within the screen bounds
 void printScreen() {
     for (int r = 0; r < screenSize; r++) {
-        //setCursor(rOffset + r, cOffset);
-        for (int c = 0; c < screenSize * 2; c++) {
-            /*Pos pos = screenToMap({r, c});
-            char val = frames[currFrame][pos.r][pos.c].value;
-            setColorCell(frames[currFrame][pos.r][pos.c]);
-            printf("%c", r == screenSize - 1 && val == ' ' ? '_' : val);*/
+        for (int c = 0; c < screenSize * 2; c++)
             printCell(screenToMap({r, c}), {r, c});
-        }
     }
 }
-
-//bool test = true;
-int lastFore = -1;
-int lastBack = -1;
-char lastType = '\0';
 
 char computePrintVal(Pos pos, Pos coord) {
     char val = frames[currFrame][pos.r][pos.c].value;
     if (frames[currFrame][pos.r][pos.c / 2 * 2].type == '-') {
         for (EnemyPos* enemy : enemyPos) {
-            if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
+            if (Pos(pos.r, pos.c / 2 * 2) == *(enemy->pos)) {
                 val = enemy->type;
                 break;
             }
@@ -96,18 +84,22 @@ void printCell(Pos pos, Pos coord) {
     DWORD written;
     WriteConsoleOutputAttribute(hConsole, &color, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);
     WriteConsoleOutputCharacterA(hConsole, buffer, 1, {(short)(cOffset + coord.c), (short)(rOffset + coord.r)}, &written);*/
+    /*CHAR_INFO buffer[1];
+    CHAR_INFO b = {
+        (CHAR)computePrintVal(pos, coord),
+        (WORD)computeColor(frames[currFrame][pos.r][pos.c])
+    };
+    buffer[0] = b;
+    SMALL_RECT s = {
+        (SHORT)(cOffset + coord.c),
+        (SHORT)(rOffset + coord.r),
+        (SHORT)(cOffset + coord.c),
+        (SHORT)(rOffset + coord.r)
+    };
+    WriteConsoleOutput(hConsole, buffer, {1, 1}, {(SHORT)(cOffset + coord.c), (SHORT)(rOffset + coord.r)}, &s);*/
     setCursor(rOffset + coord.r, cOffset + coord.c);
     setColorCell(frames[currFrame][pos.r][pos.c]);
-    char val = frames[currFrame][pos.r][pos.c].value;
-    if (frames[currFrame][pos.r][pos.c / 2 * 2].type == '-') {
-        for (EnemyPos* enemy : enemyPos) {
-            if (pos.r == enemy->pos->r && pos.c / 2 * 2 == enemy->pos->c) {
-                val = enemy->type;
-                break;
-            }
-        }
-    }
-    printf("%c", coord.r == screenSize - 1 && val == ' ' ? '_' : val);
+    printf("%c", computePrintVal(pos, coord));
 }
 
 // Updates the screen after a player moves
@@ -116,7 +108,6 @@ void printCell(Pos pos, Pos coord) {
 // Otherwise, the screen is reprinted cell by cell
 // If the movement of the screen does not change a coordinate's appearance on the screen, it is not reprinted
 void updateScreen(int dir) {
-    auto start1 = std::chrono::system_clock::now();
     for (int i = 0; i < (int)redrawList.size(); i += reprint.reprint ? 2 : 1) {
         Pos pos = redrawList[i];
         if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
@@ -126,8 +117,6 @@ void updateScreen(int dir) {
         }
     }
     redrawList.clear();
-    auto end1 = std::chrono::system_clock::now();
-    auto start2 = std::chrono::system_clock::now();
     if (reprint.reprint) {
         screenPos.r += reprint.rChange;
         screenPos.c += reprint.cChange;
@@ -149,7 +138,6 @@ void updateScreen(int dir) {
         }
         reprint.reprint = false;
     }
-    auto end2 = std::chrono::system_clock::now();
 
     for (Projectile projectile : projectileList) {
         setCursor(rOffset + projectile.coord.r, cOffset + projectile.coord.c);
@@ -238,7 +226,8 @@ void printMenu(int save) {
     gaps[1] = std::round((usableScreen - ((MENU_SIZE + 1) * ((float)(menu[0].length() + menu[1].length()) / 2))) / (MENU_SIZE + 1));
     gaps[0] = std::round(gaps[1] + ((float)menu[1].length() / 2));
 
-    CONSOLE_SCREEN_BUFFER_INFO* info = (CONSOLE_SCREEN_BUFFER_INFO*)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
+    //CONSOLE_SCREEN_BUFFER_INFO* info = (CONSOLE_SCREEN_BUFFER_INFO*)malloc(sizeof(CONSOLE_SCREEN_BUFFER_INFO));
+    CONSOLE_SCREEN_BUFFER_INFO* info = new CONSOLE_SCREEN_BUFFER_INFO;
     
     setCursor(rOffset + screenSize + menuROffset, menuCOffset);
     setColor(0);

@@ -7,12 +7,13 @@ RECT r;
 int windowWidth = ORIGINAL_WINDOW_WIDTH;
 int windowHeight = ORIGINAL_WINDOW_HEIGHT;
 
-Pos screenPos;
+Pos screenPos(-1, -1);
 std::vector<std::vector<int>> mapCoord;
 std::vector<std::vector<Cell>> frames[2];
 
 int rows, cols;
-Pos* playerPos = (Pos*)malloc(sizeof(Pos));
+//Pos* playerPos = (Pos*)malloc(sizeof(Pos));
+Pos* playerPos = new Pos(-1, -1);
 
 // Converts screen coordinate to map coordinate
 Pos screenToMap(Pos pos) {
@@ -109,7 +110,8 @@ void removeScrollbar() {
 	};
 	SetConsoleScreenBufferSize(hConsole, newSize);
 
-    CONSOLE_CURSOR_INFO* info2 = (CONSOLE_CURSOR_INFO*)malloc(sizeof(CONSOLE_CURSOR_INFO));
+    //CONSOLE_CURSOR_INFO* info2 = (CONSOLE_CURSOR_INFO*)malloc(sizeof(CONSOLE_CURSOR_INFO));
+    CONSOLE_CURSOR_INFO* info2 = new CONSOLE_CURSOR_INFO;
     GetConsoleCursorInfo(hConsole, info2);
     info2->bVisible = false;
     SetConsoleCursorInfo(hConsole, info2);
