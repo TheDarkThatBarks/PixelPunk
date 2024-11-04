@@ -647,6 +647,7 @@
             addCursorOutline(cell.r, cell.c, false);
     };
     
+    // Updates the list of cells that are not the same in both frames
     const updateFrameDif = function (r, c) {
         if (frames[0][r][c].value === frames[1][r][c].value &&
                 frames[0][r][c].fore === frames[1][r][c].fore &&
