@@ -1,4 +1,6 @@
 #include "animations.hpp"
+#include "json.hpp"
+using json = nlohmann::json;
 
 const int screenSize = 15;
 const int rOffset = 3;
@@ -13,7 +15,6 @@ const int conversationROffset = 3;
 const int conversationCOffset = cOffset + screenSize * 2 + 7;
 const int convoSize = screenSize * 2;
 const int maxCharsConvo = convoSize * 2 - 9;
-std::string currentDialogue;
 
 int currFrame = 0;
 std::vector<Pos> animChangeList;
@@ -310,52 +311,31 @@ void printConvoBox() {
 }*/
 
 // Loads given dialogue file, expands window, and displays conversation
-void conversation(std::string dialogue) {
+void conversation(npcID npc) {
     changeWindow(890, 700);
     Sleep(500);
-    std::ifstream d("Dialogues/" + dialogue);
-	currentDialogue = std::string((std::istreambuf_iterator<char>(d)), std::istreambuf_iterator<char>());
-    std::vector<std::string> lines;
-    size_t pos = 0;
-    while ((pos = currentDialogue.find('\n')) != std::string::npos) {
-        std::string str = currentDialogue.substr(0, pos);
-        lines.push_back(str);
-        currentDialogue.erase(0, pos + 1);
-    }
-    lines.push_back(currentDialogue);
-
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
-    for (int i = 0, r = 0; i < (int)lines.size(); i++) {
-        pos = lines[i].find(":");
-        //int speaker = std::stoi(lines[i].substr(0, pos));
-        std::string speaker = lines[i].substr(0, pos);
+    const json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    for (int i = 0, r = 0; i < dial.size(); i++) {
+        std::string line = dial[i]["line"].template get<std::string>();
         setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 2);
-        //setColor(speaker);
-        //printf("  ");
-        Pos npcPos = {-1, -1};
-        if (speaker == "+++") {
-            npcPos = *playerPos;
-        } else {
-            for (npcID npc : npcIDs) {
-                if (npc.id == speaker)
-                    npcPos = {npc.r, npc.c};
-            }
-        }
-        setColorCell(frames[currFrame][npcPos.r][npcPos.c]);
-        for (int i = 0; i < 2; i++)
-            printf("%c", frames[currFrame][npcPos.r][npcPos.c].value);
+        const Pos pos = dial[i]["player"].template get<bool>() ? *playerPos : npc.pos;
+        const Cell cell = frames[currFrame][pos.r][pos.c];
+        setColorCell(cell);
+        for (int j = 0; j < 2; j++)
+            printf("%c", cell.value);
         setColor(0);
         printf(" :");
         Sleep(500);
-        std::string str = lines[i].substr(pos + 1);
+        
         std::vector<std::string> strs;
-        while (str.length() > maxCharsConvo) {
-            strs.push_back(str.substr(0, maxCharsConvo));
-            str.erase(0, maxCharsConvo);
+        while (line.length() > maxCharsConvo) {
+            strs.push_back(line.substr(0, maxCharsConvo));
+            line.erase(0, maxCharsConvo);
         }
-        strs.push_back(str);
+        strs.push_back(line);
         for (int j = 0; j < (int)strs.size(); j++) {
             r += (j ? 1 : 0);
             setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 7);

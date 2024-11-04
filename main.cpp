@@ -1,5 +1,6 @@
 #pragma comment (lib, "User32.lib")
 #include "main.hpp"
+//#include <locale>
 
 std::string map;
 std::vector<std::string> mapText;
@@ -25,21 +26,18 @@ int main() {
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
+    std::locale::global(std::locale(""));
     std::wcout << L"Hello, ĐĄßĞĝ!\n";
-    //std::wcout << L"⎽⎼⎻⎺";
-    std::fflush(stdout);
+    std::wcout << L"⎽⎼⎻⎺";
+    //std::fflush(stdout);
     _setmode(_fileno(stdout), _O_TEXT);*/
     std::srand(std::time(0));
     initMap(map);
     loadAnimation();
-    /*printBox();
-    printScreen();
-    printMenu(1);*/
-    //std::cout << playerPos->r << "," << playerPos->c;
     keyPress();
-    /*std::thread thr(animLoop);
+    //std::thread thr(animLoop);
     //gameLoop();
-    thr.join();*/
+    //thr.join();
     return 0;
 }
 
@@ -125,9 +123,13 @@ void gameLoop() {
 
 void animLoop() {
     std::chrono::duration<double> elapsed = std::chrono::duration<double>::zero();
+    int count = 0;
     while (!quit) {
+        /*reset();
+        printf("loop %d", count);
+        count++;*/
         auto start = std::chrono::system_clock::now();
-        if (elapsed >= std::chrono::milliseconds(500)) {
+        /*if (elapsed >= std::chrono::milliseconds(500)) {
             currFrame = -currFrame + 1;
             for (int i = 0; i < (int)animChangeList.size(); i++) {
                 Pos pos = animChangeList[i];
@@ -159,7 +161,38 @@ void animLoop() {
             elapsed = std::chrono::duration<double>::zero();
         }// else {
             elapsed += std::chrono::system_clock::now() - start;
-        //}
+        //}*/
+        if (elapsed >= std::chrono::milliseconds(500)) {
+            currFrame = -currFrame + 1;
+            //for (Pos pos : animChangeList) {
+            for (int i = 0; i < (int)animChangeList.size(); i++) {
+                Pos pos = animChangeList[i];
+                if (pos.r >= screenPos.r && pos.r < screenPos.r + screenSize && pos.c >= screenPos.c && pos.c < screenPos.c + screenSize * 2) {
+                    printCell(pos, mapToScreen(pos));
+                    /*int c = pos.c;
+                    std::vector<WORD> colors;
+                    colors.push_back(computeColor(frames[currFrame][pos.r][pos.c]));
+                    std::vector<char> buffer;
+                    buffer.push_back(computePrintVal(pos, mapToScreen(pos)));
+                    for (int j = 1; i + j < (int)animChangeList.size(); j++) {
+                        if (animChangeList[i + j].r == pos.r && animChangeList[i + j].c == c + 1) {
+                            c++;
+                            colors.push_back(computeColor(frames[currFrame][pos.r][c]));
+                            buffer.push_back(computePrintVal({pos.r, c}, mapToScreen({pos.r, c})));
+                        } else {
+                            break;
+                        }
+                    }
+                    DWORD written;
+                    WriteConsoleOutputAttribute(hConsole, &colors[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    WriteConsoleOutputCharacterA(hConsole, &buffer[0], c - pos.c + 1, {(short)(cOffset + pos.c), (short)(rOffset + pos.r)}, &written);
+                    i += c - pos.c;*/
+                }
+            }
+            //reset();
+            elapsed = std::chrono::duration<double>::zero();
+        }
+        elapsed += std::chrono::system_clock::now() - start;
     }
 }
 
@@ -221,6 +254,8 @@ void initMap(std::string map) {
     frames[0] = std::vector<std::vector<Cell>>(rows, std::vector<Cell>());
     frames[1] = std::vector<std::vector<Cell>>(rows, std::vector<Cell>());
     bool start = false;
+    //reset();
+    //std::cout << idx << " " << rows << " " << cols << "\n";
     while (idx < (int)map.length()) {
         const char type = map[idx];
         //std::cout << (type == ' ' ? 'E' : type) << "\n";
@@ -258,8 +293,10 @@ void initMap(std::string map) {
         if (cell.cell.isNPC) {
             //std::cout << "NPC r: " << r << " " << frames[0].size() << "\n";
             npcIDs.push_back({
-                r,
-                (int)frames[0][r].size(),
+                {
+                    r,
+                    (int)frames[0][r].size()
+                },
                 cellStr
             });
         }
@@ -431,8 +468,6 @@ void attack(Pos pos) {
     }
 }
 
-int moved = 0;
-
 // Core game loop, checks for keyboard input and also handles animation frames
 void keyPress() {
     int kbCode = 0;
@@ -442,8 +477,7 @@ void keyPress() {
         if (kbhit()) {
             kbCode = getch();
             if (kbMode == MOVE) {
-                if (/*moved < 2 && */(kbCode == 0 || kbCode == 224)) {
-                    moved++;
+                if (kbCode == 0 || kbCode == 224) {
                     int rChange = 0, cChange = 0;
                     int dir = -1;
                     switch (getch()) {
@@ -469,8 +503,7 @@ void keyPress() {
                     updateScreen(dir);
                     //while (kbhit())
                     //    getch();
-                } else if (/*moved < 2 && */kbCode == KB_SPACE) {
-                    moved++;
+                } else if (kbCode == KB_SPACE) {
                     enemyAI();
                     updateScreen(-1);
                 } else if (kbCode == KB_TAB) {
@@ -486,17 +519,11 @@ void keyPress() {
                             npcPos = {playerPos->r + options[i][0], playerPos->c + options[i][1]};
                     }
                     if (foundNPC) {
-                        std::string npcId = "";
                         for (npcID npc : npcIDs) {
-                            if (npc.r == npcPos.r && npc.c == npcPos.c) {
-                                npcId = npc.id;
+                            if (npc.pos == npcPos) {
+                                conversation(npc);
                                 break;
                             }
-                        }
-                        if (npcId == "&70") {
-                            conversation("Dialogue1.txt");
-                        } else if (npcId == "!70") {
-                            conversation("Dialogue2.txt");
                         }
                     }
                 } else if (kbCode == 47 /* / */) {
@@ -585,7 +612,6 @@ void keyPress() {
             }
             reset();
             elapsed = std::chrono::duration<double>::zero();
-            moved = 0;
         }
     }
 }

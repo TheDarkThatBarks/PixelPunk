@@ -270,6 +270,14 @@
         document.querySelector(`#frame${currFrame + 1}`).checked = true;
     };
 
+    const copyCells = function () {
+        const newFrame = -currFrame + 1;
+        for (const cell of selectedCells)
+            frames[newFrame][cell.r][cell.c] = JSON.parse(JSON.stringify(frames[currFrame][cell.r][cell.c]));
+        changeFrame(newFrame);
+        document.querySelector(`#frame${newFrame}`).checked = true;
+    };
+
     // Plays and stops the animation
     // Animation runs at 2 frames per second
     const play = function (button) {
@@ -728,6 +736,7 @@
         <option value="+">Player</option>
     </select>
     <input id="npc-id" style="width: 50px" onclick="navigator.clipboard.writeText(this.value)" readonly>
+    <button onclick="copyCells()">Copy Cells</button>
     <br><br>
     <input type="checkbox" id="start" onclick="setStart(this.checked)">
     <label for="start">Screen Start</label>

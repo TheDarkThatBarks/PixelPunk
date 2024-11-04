@@ -75,6 +75,12 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "filesystem": "cpp",
+        "list": "cpp",
+        "valarray": "cpp",
+        "xhash": "cpp"
     }
 }

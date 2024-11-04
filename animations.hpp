@@ -24,7 +24,6 @@ extern const int conversationROffset;
 extern const int conversationCOffset;
 extern const int convoSize;
 extern const int maxCharsConvo;
-extern std::string currentDialogue;
 
 extern std::string map;
 
@@ -41,8 +40,7 @@ struct Reprint {
 };
 extern Reprint reprint;
 struct npcID {
-    int r;
-    int c;
+    Pos pos;
     std::string id;
 };
 extern std::vector<npcID> npcIDs;
@@ -70,5 +68,5 @@ void changeWindow(int width, int time);
 
 void printConvoBox();
 //void clearConvoBox();
-void conversation(std::string dialogue);
+void conversation(npcID npc);
 void printConversationText(std::string line);

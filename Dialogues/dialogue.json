@@ -1,0 +1,26 @@
+{
+    "&70": [
+        {
+            "player": false,
+            "line": "Oh I didn't know anyone had survived that blast.50:Oh I didn't know anyone had survived that blast."
+        },
+        {
+            "player": false,
+            "line": "What, your mouth doesn't work anymore?"
+        },
+        {
+            "player": true,
+            "line": "Shut up."
+        }
+    ],
+    "!70": [
+        {
+            "player": false,
+            "line": "I'm a second NPC"
+        },
+        {
+            "player": false,
+            "line": "Isn't that cool?"
+        }
+    ]
+}
