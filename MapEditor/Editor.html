@@ -245,7 +245,16 @@
     // Changes the visual size of every cell in the interface
     const changeCellSize = function (newWidth) {
         cellWidth = newWidth;
-        load();
+        for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+                const cell = document.querySelector(`#r${i}c${j}`);
+                cell.style.width = `${cellWidth}px`;
+                cell.style.height = `${cellWidth * 2}px`;
+                cell.style.fontSize = `${cellWidth * 2}px`;
+                cell.parentElement.style.width = `${cellWidth}px`;
+                cell.parentElement.style.height = `${cellWidth * 2}px`;
+            }
+        }
     };
 
     // Changes the frame and reloads the map
@@ -297,9 +306,9 @@
                     document.querySelector("#npc-id").value = npcID.id;
                 }
             } else {
+                document.querySelector(`#r${cell.r}c${cell.c}`).value = val;
                 frames[currFrame][cell.r][cell.c].value = val;
                 updateFrameDif(cell.r, cell.c);
-                document.querySelector(`#r${cell.r}c${cell.c}`).value = val;
             }
         }
         //console.log("changeVal", frames);
@@ -326,6 +335,7 @@
             } else {
                 document.querySelector(`#r${cell.r}c${cell.c}`).style.color = colors[color];
                 frames[currFrame][cell.r][cell.c].fore = parseInt(color);
+                updateFrameDif(cell.r, cell.c);
             }
         }
         //console.log(frames);
@@ -348,6 +358,7 @@
             } else {
                 document.querySelector(`#r${cell.r}c${cell.c}`).style.backgroundColor = colors[color];
                 frames[currFrame][cell.r][cell.c].back = parseInt(color);
+                updateFrameDif(cell.r, cell.c);
             }
         }
         //console.log(frames);
@@ -661,7 +672,7 @@
     </form>
     <br>
     <label for="grid">Toggle Grid</label>
-    <input type="checkbox" id="grid" onchange="setGrid(this.value)">
+    <input type="checkbox" id="grid" onchange="setGrid(this.checked)">
     <label for="size">Cell Width (Pixels)</label>
     <input type="number" id="size" value="20" onchange="changeCellSize(this.value)">
     <br><br>
