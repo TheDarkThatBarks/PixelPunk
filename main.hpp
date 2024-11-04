@@ -27,7 +27,7 @@
 int kbMode = MOVE;
 int selection = 0;
 
-const int screenThreshold = 3;
+const int screenThreshold = 4;
 
 struct Node {
     int r, c, f, g;

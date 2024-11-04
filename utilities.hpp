@@ -54,7 +54,7 @@ struct Cell {
     }*/
 
     bool operator==(Cell c) {
-        return c.type == type /*&& c.value == value && c.fore == fore && c.back == back && c.isPlayer == isPlayer && c.isEnemy == isEnemy*/;
+        return c.value == value && c.fore == fore && c.back == back /*&& c.value == value && c.fore == fore && c.back == back && c.isPlayer == isPlayer && c.isEnemy == isEnemy*/;
     }
 };
 

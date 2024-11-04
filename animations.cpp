@@ -37,6 +37,8 @@ void loadAnimation() {
 
     funcs.push_back(&printMapBasic);
     loopFunctions(3, 500, 50, &printMapBasic, funcs);
+    reset();
+    //printf("Finished printMapBasic");
 
     funcs.clear();
     funcs.push_back(&printMapBasic);
@@ -118,6 +120,8 @@ void updateScreen(int dir) {
     }
     redrawList.clear();
     if (reprint.reprint) {
+        //reset();
+        //printf("Reprint");
         screenPos.r += reprint.rChange;
         screenPos.c += reprint.cChange;
         for (int r = 0; r < screenSize; r++) {
@@ -165,11 +169,15 @@ void printBox() {
 // Prints a basic version of the map, types instead of values
 void printMapBasic() {
     setColor(0);
+    //reset();
     for (int r = 0; r < screenSize; r++) {
         setCursor(rOffset + r, cOffset);
         for (int c = 0; c < screenSize * 2; c++) {
             Pos pos = screenToMap({r, c});
+            //printf("%d, %d, %d, %d, ", r, c, screenPos.r, screenPos.c);
             //char val = frames[currFrame][pos.r][pos.c].value;
+            //printf("%d, %d, %d, ", currFrame, pos.r, pos.c);
+            //printf("%c\n", frames[currFrame][pos.r][pos.c].type);
             printf("%c", frames[currFrame][pos.r][pos.c].type == ' ' ? (r == screenSize - 1 ? '_' : ' ') : frames[currFrame][pos.r][pos.c].type);
         }
     }

@@ -6,9 +6,12 @@
 </head>
 
 <style>
+    body {
+        width: fit-content;
+    }
+    
     #table {
-        margin-top: 30px;
-        margin-left: 30px;
+        margin: 30px;
         outline: thick solid white;
         /*border: 1px solid white;
         border-style: none;*/
@@ -53,6 +56,7 @@
     let selectedCells = [];
 
     let frames = [[], []];
+    let frameDif = [];
     let currFrame = 0;
 
     let currPlayer = [-1, -1];
@@ -203,6 +207,7 @@
         table.hidden = false;
         table.innerHTML = "";
         frames = [[], []];
+        frameDif = [];
         for (let i = 0; i < height; i++) {
             let str = "<tr>";
             frames[0].push([]);
@@ -293,8 +298,9 @@
                 }
             } else {
                 frames[currFrame][cell.r][cell.c].value = val;
+                updateFrameDif(cell.r, cell.c);
+                document.querySelector(`#r${cell.r}c${cell.c}`).value = val;
             }
-            document.querySelector(`#r${cell.r}c${cell.c}`).value = val;
         }
         //console.log("changeVal", frames);
     };
@@ -517,9 +523,9 @@
     const load = function (frame) {
         if (frame === -1) {
             let map = document.querySelector("#map").value;
-            height = parseInt(map.slice(0, 2));
-            width = parseInt(map.slice(3, 5));
-            let idx = 6, r = 0;
+            height = parseInt(map.slice(0, map.indexOf('x')));
+            width = parseInt(map.slice(3, map.indexOf('|')));
+            let idx = map.indexOf('|') + 1, r = 0;
             let lastCell = "";
             frames = [[], []];
             npcIDs = [];
@@ -528,6 +534,7 @@
                 frames[1].push([]);
             }
             //console.log(JSON.parse(JSON.stringify(frames)));
+            console.log(idx);
             let start = false;
             while (idx < map.length) {
                 const type = map[idx];
@@ -574,6 +581,7 @@
                     }
                     cell.isStart = lastCell.isStart;
                     frames[1][r].push(JSON.parse(JSON.stringify(cell)));
+                    updateFrameDif(r, frames[0][r].length - 1);
                     cell.type = "*";
                 } else {
                     frames[0][r].push(JSON.parse(JSON.stringify(cell)));
@@ -589,34 +597,59 @@
                 frames[1][r].push(JSON.parse(JSON.stringify(lastCell)));
             cursorCell.r = 0;
             cursorCell.c = 0;
-        }
-        console.log("load", frames);
 
-        const table = document.querySelector("#table");
-        table.hidden = false;
-        table.innerHTML = "";
-        for (let i = 0; i < height; i++) {
-            let str = "<tr>";
-            for (let j = 0; j < width; j++) {
-                const cell = frames[currFrame][i][j];
-                //console.log(cell);
-                if (cell.isPlayer && currPlayer[0] === -1)
-                    currPlayer = [i, j];
-                str += `<td width=${cellWidth}px height=${cellWidth * 2}px>
-                            <input
-                                value="${cell.value}"
-                                style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px;
-                                       color: ${colors[cell.isPlayer ? 5 : cell.fore]};
-                                       background-color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : (cell.isNPC ? 9 : cell.back))]};"
-                                maxlength=1 class="cell" id="r${i}c${j}"
-                                onclick="setCursorPos(${i}, ${j})" oninput="changeVal(this.value)"
-                            >
-                        </td>`;
+            console.log("load", frames);
+
+            const table = document.querySelector("#table");
+            table.hidden = false;
+            table.innerHTML = "";
+            for (let i = 0; i < height; i++) {
+                let str = "<tr>";
+                for (let j = 0; j < width; j++) {
+                    const cell = frames[currFrame][i][j];
+                    //console.log(cell);
+                    if (cell.isPlayer && currPlayer[0] === -1)
+                        currPlayer = [i, j];
+                    str += `<td width=${cellWidth}px height=${cellWidth * 2}px>
+                                <input
+                                    value="${cell.value}"
+                                    style="font-size: ${cellWidth * 2}px; width: ${cellWidth}px; height: ${cellWidth * 2}px;
+                                        color: ${colors[cell.isPlayer ? 5 : cell.fore]};
+                                        background-color: ${colors[cell.isPlayer ? 5 : (cell.isEnemy ? 12 : (cell.isNPC ? 9 : cell.back))]};"
+                                    maxlength=1 class="cell" id="r${i}c${j}"
+                                    onclick="setCursorPos(${i}, ${j})" oninput="changeVal(this.value)"
+                                >
+                            </td>`;
+                }
+                table.innerHTML += str + "</tr>";
             }
-            table.innerHTML += str + "</tr>";
+        } else {
+            for (const cell of frameDif) {
+                const vCell = document.querySelector(`#r${cell.r}c${cell.c}`);
+                const c = frames[currFrame][cell.r][cell.c];
+                vCell.value = c.value;
+                vCell.style.color = colors[c.fore];
+                vCell.style.backgroundColor = colors[c.back];
+            }
         }
         for (const cell of selectedCells)
             addCursorOutline(cell.r, cell.c, false);
+    };
+    
+    const updateFrameDif = function (r, c) {
+        if (frames[0][r][c].value === frames[1][r][c].value &&
+                frames[0][r][c].fore === frames[1][r][c].fore &&
+                frames[0][r][c].back === frames[1][r][c].back) {
+            const idx = frameDif.findIndex((e) => e.r == r && e.c == c);
+            if (idx > -1)
+                frameDif.splice(idx, 1);
+        } else {
+            frameDif.push({
+                r: r,
+                c: c
+            });
+        }
+        console.log("frameDif", JSON.parse(JSON.stringify(frameDif)));
     };
 </script>
 

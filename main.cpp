@@ -21,7 +21,7 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("Maps/map6.txt");
+    std::ifstream m("Maps/gameDemo.txt");
 	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
@@ -36,10 +36,10 @@ int main() {
     printScreen();
     printMenu(1);*/
     //std::cout << playerPos->r << "," << playerPos->c;
-    //keyPress();
-    std::thread thr(animLoop);
-    gameLoop();
-    thr.join();
+    keyPress();
+    /*std::thread thr(animLoop);
+    //gameLoop();
+    thr.join();*/
     return 0;
 }
 
@@ -197,9 +197,9 @@ void initMap(std::string map) {
     playerPos->c = -1;
     screenPos.r = -1;
     screenPos.c = -1;
-    rows = std::stoi(map.substr(0, 2));
-    cols = std::stoi(map.substr(3, 2));
-    int idx = 6, r = 0;
+    rows = std::stoi(map.substr(0, (int)map.find("x")));
+    cols = std::stoi(map.substr(3, (int)map.find("|")));
+    int idx = (int)map.find("|") + 1, r = 0;
     struct cell2 {
         char type;
         Cell cell;
@@ -223,7 +223,9 @@ void initMap(std::string map) {
     bool start = false;
     while (idx < (int)map.length()) {
         const char type = map[idx];
+        //std::cout << (type == ' ' ? 'E' : type) << "\n";
         if (type == '^') {
+            //std::cout << idx << "\n";
             start = true;
             idx++;
             continue;
@@ -232,11 +234,13 @@ void initMap(std::string map) {
                 frames[1][r].push_back(copyCell(lastCell.cell));
             idx++;
             r++;
+            //std::cout << idx << " " << map.length() << " " << r << "\n";
             lastCell.type = 0;
             initCell(lastCell.cell);
             continue;
         }
         const std::string cellStr = map.substr(idx + 1, 3);
+        //std::cout << "cellStr " << cellStr << "\n";
         cell2 cell = {
             type,
             {
@@ -252,6 +256,7 @@ void initMap(std::string map) {
         };
         //std::cout << cell.type << "," << cell.cell.value << "," << cell.cell.fore << "," << cell.cell.back << "," << cell.cell.isPlayer << "," << cell.cell.isNPC << "," << cell.cell.isStart << "\n";
         if (cell.cell.isNPC) {
+            //std::cout << "NPC r: " << r << " " << frames[0].size() << "\n";
             npcIDs.push_back({
                 r,
                 (int)frames[0][r].size(),
@@ -265,6 +270,7 @@ void initMap(std::string map) {
                 (int)frames[0][r].size() - 1
             });*/
             if (animChangeList.empty()) {
+                //std::cout << "Anim List r: " << r << " " << frames[0].size() << "\n";
                 animChangeList.push_back({
                     r,
                     (int)frames[0][r].size() - 1
@@ -272,12 +278,14 @@ void initMap(std::string map) {
             } else {
                 for (int i = 0; i < animChangeList.size(); i++) {
                     if ((animChangeList[i].r == r && animChangeList[i].c > (int)frames[0][r].size() - 1) || animChangeList[i].r > r) {
+                        //std::cout << "Anim List r: " << r << " " << frames[0].size() << "\n";
                         animChangeList.insert(animChangeList.begin() + i, {
                             r,
                             (int)frames[0][r].size() - 1
                         });
                         break;
                     } else if (i + 1 == animChangeList.size()) {
+                        //std::cout << "Anim List r: " << r << " " << frames[0].size() << "\n";
                         animChangeList.push_back({
                             r,
                             (int)frames[0][r].size() - 1
@@ -297,6 +305,9 @@ void initMap(std::string map) {
             cell.cell.isStart = lastCell.cell.isStart;
             frames[1][r].push_back(copyCell(cell.cell));
         } else {
+            //std::cout << "Pushing 1 r: " << r << " " << frames[0].size() << "\n";
+            //if (r == 50)
+            //    std::cout << "Pushing 1 r: " << frames[0][r - 1].size() << "\n";
             frames[0][r].push_back(copyCell(cell.cell));
             if (cell.cell.isPlayer && playerPos->r == -1) {
                 playerPos->r = r;
@@ -305,9 +316,11 @@ void initMap(std::string map) {
             if (cell.cell.isEnemy && frames[0][r][frames[0][r].size() - 2].type != '-')
                 enemyPos.push_back(new EnemyPos(new Pos(r, (int)frames[0][r].size() - 1), cellStr[0]));
             if (cell.cell.isStart && screenPos.r == -1) {
+                //std::cout << "screenPos: " << r << " " << frames[0][r].size() << "\n";
                 screenPos.r = r;
                 screenPos.c = frames[0][r].size() - 1;
             }
+            //std::cout << "Pushing 2 r: " << r << " " << frames[1].size() << "\n";
             if (lastCell.type != 0 && lastCell.type != '*')
                 frames[1][r].push_back(copyCell(lastCell.cell));
         }
@@ -349,6 +362,8 @@ void changePos(Pos* pos, int newR, int newC, bool player) {
             } else if (screenPos.c - 1 >= 0 && newC < screenPos.c + screenThreshold * 2) {
                 cChange--;
             }
+            //reset();
+            //printf("%d %d %d %d %d %d", pos->r, pos->c, newR, newC, rChange, cChange);
         } else {
             for (int i = 0; i < 2; i++) {
                 frames[i][pos->r][pos->c].type = ' ';
@@ -484,6 +499,11 @@ void keyPress() {
                             conversation("Dialogue2.txt");
                         }
                     }
+                } else if (kbCode == 47 /* / */) {
+                    std::ifstream m("Maps/gameDemo.txt");
+	                map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+                    initMap(map);
+                    printScreen();
                 }
             } else if (kbMode == MENU) {
                 if (kbCode == 0 || kbCode == 224) {
