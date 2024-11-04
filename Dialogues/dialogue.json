@@ -16,11 +16,27 @@
     "!70": [
         {
             "player": false,
-            "line": "I'm a second NPC"
+            "line": "Oh I didn't know anyone had survived that blast."
         },
         {
             "player": false,
-            "line": "Isn't that cool?"
+            "line": "We're pretty much all out at this point."
+        },
+        {
+            "player": false,
+            "line": "Head out through the vent. Watch out for the loose wires though."
+        },
+        {
+            "player": false,
+            "line": "..."
+        },
+        {
+            "player": false,
+            "line": "What, your mouth break in the explosion?"
+        },
+        {
+            "player": true,
+            "line": "Shut up."
         }
     ]
 }
