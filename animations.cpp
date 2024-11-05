@@ -25,7 +25,7 @@ Reprint reprint;
 std::vector<npcID> npcIDs;
 std::vector<EnemyPos*> enemyPos;
 
-std::string title[] = {
+const std::string title[] = {
     "_______ __               __ _______             __    ",
     "\\____  \\__|__  ___ ____ |  |\\____  \\__ __  ___ |  | __",
     " |   __/  \\  \\/  // __ \\|  | |   __/  |  \\/   \\|  |/ /",
@@ -46,8 +46,7 @@ void printTitle() {
 void clearTitle() {
     for (int i = 0; i < 6; i++) {
         setCursor(i + 5, 5);
-        for (int j = 0; j < 60; j++)
-            printf(" ");
+        printf(std::string(60, ' ').c_str());
     }
 }
 
@@ -57,18 +56,14 @@ void closeTitle() {
     const int height = 5;
     const int width = 60;
     int middle = std::round((float)height / 2);
-    for (int h = middle - 2; h >= 0; h--) {
+    for (int h = middle - 2; h >= -1; h--) {
         setCursor(rowOffset + middle - 2 - h, colOffset);
         printf(std::string(width, ' ').c_str());
         setCursor(rowOffset + middle + h + 1, colOffset);
         printf(std::string(width, ' ').c_str());
-        Sleep(50);
-        //getch();
+        if (h != -1)
+            Sleep(50);
     }
-    setCursor(rowOffset + middle - 1, colOffset - 1);
-    printf(std::string(width, ' ').c_str());
-    setCursor(rowOffset + middle, colOffset - 1);
-    printf(std::string(width, ' ').c_str());
 }
 
 // Runs start animation
@@ -267,21 +262,19 @@ void screenLoad(int width, int height, int rowOffset, int colOffset) {
 // Runs animation for "closing" a screen somewhere in the window
 void screenClose(int width, int height, int rowOffset, int colOffset) {
     int middle = std::round((float)height / 2);
-    for (int h = middle - 2; h >= 0; h--) {
+    for (int h = middle - 2; h >= -1; h--) {
         setCursor(rowOffset + middle - 3 - h, colOffset - 1);
         printf(std::string(width * 2 + 2, ' ').c_str());
-        setCursor(rowOffset + middle - 2 - h, colOffset - 1);
-        printf(" %s ", std::string(width * 2, '_').c_str());
-        setCursor(rowOffset + middle + h - 1, colOffset - 1);
-        printf("|%s|", std::string(width * 2, '_').c_str());
         setCursor(rowOffset + middle + h, colOffset - 1);
         printf(std::string(width * 2 + 2, ' ').c_str());
-        Sleep(50);
+        if (h != -1) {
+            setCursor(rowOffset + middle - 2 - h, colOffset - 1);
+            printf(" %s ", std::string(width * 2, '_').c_str());
+            setCursor(rowOffset + middle + h - 1, colOffset - 1);
+            printf("|%s|", std::string(width * 2, '_').c_str());
+            Sleep(50);
+        }
     }
-    setCursor(rowOffset + middle - 2, colOffset - 1);
-    printf(std::string(width * 2 + 2, ' ').c_str());
-    setCursor(rowOffset + middle - 1, colOffset - 1);
-    printf(std::string(width * 2 + 2, ' ').c_str());
 }
 
 // Prints the menu located under the screen
