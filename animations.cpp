@@ -326,16 +326,16 @@ void conversation(npcID npc) {
         }
     }
     const SMALL_RECT scrollRect {
-        (short)(conversationCOffset + 2),
-        (short)(conversationROffset + 1),
-        (short)(conversationCOffset + 7 + maxCharsConvo),
-        (short)(conversationROffset + 13)
+        conversationCOffset + 2,
+        conversationROffset + 1,
+        conversationCOffset + 7 + maxCharsConvo,
+        conversationROffset + 13
     };
     const SMALL_RECT clipRect {
-        (short)(conversationCOffset + 2),
-        (short)(conversationROffset),
-        (short)(conversationCOffset + 7 + maxCharsConvo),
-        (short)(conversationROffset + 13)
+        conversationCOffset + 2,
+        conversationROffset,
+        conversationCOffset + 7 + maxCharsConvo,
+        conversationROffset + 13
     };
     const CHAR_INFO charInfo {
         ' ',
@@ -343,9 +343,7 @@ void conversation(npcID npc) {
     };
     for (int i = 0, r = 0; i < dial.size(); i++) {
         if (2 * i + r > 12) {
-            //getch();
             ScrollConsoleScreenBuffer(hConsole, &scrollRect, &clipRect, {conversationCOffset + 2, conversationROffset - 1}, &charInfo);
-            //getch();
             r -= 2;
         }
 
@@ -388,9 +386,7 @@ void conversation(npcID npc) {
         for (int j = 0; j < (int)strs.size(); j++) {
             r += (j ? 1 : 0);
             if (2 * i + r > 12) {
-                //getch();
-                ScrollConsoleScreenBuffer(hConsole, &scrollRect, &clipRect, {(short)(conversationCOffset + 2), (short)conversationROffset}, &charInfo);
-                //getch();
+                ScrollConsoleScreenBuffer(hConsole, &scrollRect, &clipRect, {conversationCOffset + 2, conversationROffset}, &charInfo);
                 r--;
             }
             setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 7);
