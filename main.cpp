@@ -9,6 +9,8 @@ int textIndex = 0;
 // Creates and sizes window, loads map file, runs start animation, and starts game loop
 int main() {
     GetWindowRect(console, &r);
+    windowWidth = 539;
+    windowHeight = 294;
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
@@ -16,7 +18,7 @@ int main() {
     SetWindowLong(console, GWL_STYLE, style);
     SetWindowPos(console, NULL, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_FRAMECHANGED|SWP_NOZORDER);
     removeScrollbar();
-    SetWindowTextW(console, L"Square RPG");
+    SetWindowTextW(console, L"PixelPunk");
 
     //PlaySoundW(L"Beep Speech.wav", NULL, SND_FILENAME | SND_ASYNC);
 
@@ -36,9 +38,9 @@ int main() {
     //getch();
     loadAnimation();
     keyPress();
-    //std::thread thr(animLoop);
-    //gameLoop();
-    //thr.join();
+    /*std::thread thr(animLoop);
+    gameLoop();
+    thr.join();*/
     return 0;
 }
 

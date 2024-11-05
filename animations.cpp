@@ -25,13 +25,70 @@ Reprint reprint;
 std::vector<npcID> npcIDs;
 std::vector<EnemyPos*> enemyPos;
 
+std::string title[] = {
+    "_______ __               __ _______             __    ",
+    "\\____  \\__|__  ___ ____ |  |\\____  \\__ __  ___ |  | __",
+    " |   __/  \\  \\/  // __ \\|  | |   __/  |  \\/   \\|  |/ /",
+    " |  |  |  |>    <\\  ___/|  |_|  |  |  |  /  |  \\    < ",
+    " |__|  |__/__/\\_  \\___  >____/__|  |____/|__|  /__|_ \\",
+    "                \\/    \\/                     \\/     \\/"
+};
+
+void printTitle() {
+    int r = 5;
+    for (std::string line : title) {
+        setCursor(r, 5);
+        printf("%s", line);
+        r++;
+    }
+}
+
+void clearTitle() {
+    for (int i = 0; i < 6; i++) {
+        setCursor(i + 5, 5);
+        for (int j = 0; j < 60; j++)
+            printf(" ");
+    }
+}
+
+void closeTitle() {
+    const int rowOffset = 5;
+    const int colOffset = 5;
+    const int height = 5;
+    const int width = 60;
+    int middle = std::round((float)height / 2);
+    for (int h = middle - 2; h >= 0; h--) {
+        setCursor(rowOffset + middle - 2 - h, colOffset);
+        printf(std::string(width, ' ').c_str());
+        setCursor(rowOffset + middle + h + 1, colOffset);
+        printf(std::string(width, ' ').c_str());
+        Sleep(50);
+        //getch();
+    }
+    setCursor(rowOffset + middle - 1, colOffset - 1);
+    printf(std::string(width, ' ').c_str());
+    setCursor(rowOffset + middle, colOffset - 1);
+    printf(std::string(width, ' ').c_str());
+}
+
 // Runs start animation
 void loadAnimation() {
     std::vector<void (*)()> funcs;
 
+    funcs.push_back(&clearTitle);
+    funcs.push_back(&printTitle);
+    loopFunctions(3, 500, 50, &printTitle, funcs);
+
+    Sleep(2000);
+    closeTitle();
+
+    Sleep(500);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT, 400);
+
     Sleep(500);
     screenLoad(screenSize, screenSize, rOffset, cOffset);
 
+    funcs.clear();
     funcs.push_back(&clearScreen);
     funcs.push_back(&printBox);
     //loopFunctions(3, 500, 50, &printBox, funcs);
@@ -252,39 +309,65 @@ void printMenu(int save) {
     reset();
 }
 
-// Sets the window to the desired width in the given number of seconds
-void changeWindow(int width, int time) {
+// Sets the window to the desired width in the given number of milliseconds
+void changeWindow(int width, int height, int time) {
     time *= 0.9;
-    int sleepTime = 0, increment = INT_MAX;
-    for (int i = 20; i < std::abs(width - windowWidth); i++) {
-        for (int j = 1; j < increment && i * j <= std::abs(width - windowWidth); j++) {
-            if (((float)std::abs(width - windowWidth) / j) * i > time * 0.98 && ((float)std::abs(width - windowWidth) / j) * i < time * 1.02) {
-                sleepTime = i;
-                increment = j;
+    int sleepTime = 0, increments[] = {INT_MAX, INT_MAX};
+    if (width == windowWidth) {
+        for (int i = 20; i < std::abs(height - windowHeight); i++) {
+            for (int j = 1; j < increments[1] && i * j <= std::abs(height - windowHeight); j++) {
+                if (((float)std::abs(height - windowHeight) / j) * i > time * 0.95 && ((float)std::abs(height - windowHeight) / j) * i < time * 1.05) {
+                    sleepTime = i;
+                    increments[1] = j;
+                }
             }
         }
+        increments[0] = 0;
+        increments[1] *= windowHeight < height ? 1 : -1;
+    } else if (height == windowHeight) {
+        for (int i = 20; i < std::abs(width - windowWidth); i++) {
+            for (int j = 1; j < increments[0] && i * j <= std::abs(width - windowWidth); j++) {
+                if (((float)std::abs(width - windowWidth) / j) * i > time * 0.95 && ((float)std::abs(width - windowWidth) / j) * i < time * 1.05) {
+                    sleepTime = i;
+                    increments[0] = j;
+                }
+            }
+        }
+        increments[0] *= windowWidth < width ? 1 : -1;
+        increments[1] = 0;
+    } else {
+        for (int i = 20; i < std::abs(width - windowWidth); i++) {
+            for (int j = 1; j < increments[0] && i * j <= std::abs(width - windowWidth); j++) {
+                if (((float)std::abs(width - windowWidth) / j) * i > time * 0.6 && ((float)std::abs(width - windowWidth) / j) * i < time * 1.4) {
+                    sleepTime = i;
+                    increments[0] = j;
+                }
+            }
+        }
+        increments[0] *= windowWidth < width ? 1 : -1;
+        for (int j = 1; j < increments[1] && sleepTime * j <= std::abs(height - windowHeight); j++) {
+            if (((float)std::abs(height - windowHeight) / j) * sleepTime > time * 0.6 && ((float)std::abs(height - windowHeight) / j) * sleepTime < time * 1.4)
+                increments[1] = j;
+        }
+        increments[1] *= windowHeight < height ? 1 : -1;
     }
-    if (sleepTime == 0 && increment == INT_MAX)
+    if (sleepTime == 0 && increments[0] == INT_MAX)
         return;
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style |= WS_SIZEBOX;
     SetWindowLong(console, GWL_STYLE, style);
-    if (width > windowWidth) {
-        while (windowWidth <= width) {
-            windowWidth += increment;
-            SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
-            removeScrollbar();
-            Sleep(sleepTime);
-        }
-    } else {
-        while (windowWidth >= width) {
-            windowWidth -= increment;
-            SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
-            removeScrollbar();
-            Sleep(sleepTime);
-        }
+    const bool increasingWidth = windowWidth < width;
+    const bool increasingHeight = windowHeight < height;
+    while ((increasingWidth && windowWidth < width) || (!increasingWidth && windowWidth > width) ||
+                (increasingHeight && windowHeight < height) || (!increasingHeight && windowHeight > height)) {
+        windowWidth += increments[0];
+        windowHeight += increments[1];
+        SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
+        removeScrollbar();
+        Sleep(sleepTime);
     }
     windowWidth = width;
+    windowHeight = height;
     SetWindowPos(console, NULL, r.left, r.top, windowWidth, windowHeight, SWP_NOMOVE|SWP_FRAMECHANGED|SWP_NOZORDER);
     removeScrollbar();
     style &= ~WS_SIZEBOX;
@@ -313,7 +396,7 @@ void printConvoBox() {
 // Loads given dialogue file, expands window, and displays conversation
 void conversation(npcID npc) {
     setColor(0);
-    changeWindow(890, 700);
+    changeWindow(CONVERSATION_WINDOW_WIDTH, windowHeight, 700);
     Sleep(500);
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
@@ -396,7 +479,7 @@ void conversation(npcID npc) {
     }
     Sleep(1000);
     screenClose(convoSize, screenSize, conversationROffset, conversationCOffset);
-    changeWindow(ORIGINAL_WINDOW_WIDTH, 700);
+    changeWindow(ORIGINAL_WINDOW_WIDTH, windowHeight, 700);
 }
 
 // Prints a line of conversation dialogue character by character

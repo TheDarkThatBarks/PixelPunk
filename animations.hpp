@@ -65,7 +65,7 @@ void screenLoad(int width, int height, int rowOffset, int colOffset);
 void screenClose(int width, int height, int rowOffset, int colOffset);
 void printMenu(int save);
 
-void changeWindow(int width, int time);
+void changeWindow(int width, int height, int time);
 
 void printConvoBox();
 //void clearConvoBox();
