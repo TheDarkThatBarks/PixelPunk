@@ -25,36 +25,46 @@ Reprint reprint;
 std::vector<npcID> npcIDs;
 std::vector<EnemyPos*> enemyPos;
 
+const int TITLE_HEIGHT = 6;
+const int TITLE_WIDTH = 60;
 const std::string title[] = {
     "_______ __               __ _______             __    ",
     "\\____  \\__|__  ___ ____ |  |\\____  \\__ __  ___ |  | __",
     " |   __/  \\  \\/  // __ \\|  | |   __/  |  \\/   \\|  |/ /",
     " |  |  |  |>    <\\  ___/|  |_|  |  |  |  /  |  \\    < ",
-    " |__|  |__/__/\\_  \\___  >____/__|  |____/|__|  /__|_ \\",
+    " |__|  |__/__/\\_ \\\\___  >____/__|  |____/|__|  /__|_ \\",
     "                \\/    \\/                     \\/     \\/"
 };
+
+/*const std::string title[5] = {
+    "______________ ",
+    "\\____  \\____  \\",
+    " |   __/|   __/",
+    " |  |   |  |   ",
+    " |__|   |__|   "
+};*/
 
 void printTitle() {
     int r = 5;
     for (std::string line : title) {
         setCursor(r, 5);
-        printf("%s", line);
+        printf("%s", line.c_str());
         r++;
     }
 }
 
 void clearTitle() {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < TITLE_HEIGHT; i++) {
         setCursor(i + 5, 5);
-        printf(std::string(60, ' ').c_str());
+        printf(std::string(TITLE_WIDTH, ' ').c_str());
     }
 }
 
 void closeTitle() {
     const int rowOffset = 5;
     const int colOffset = 5;
-    const int height = 5;
-    const int width = 60;
+    const int height = TITLE_HEIGHT - 1;
+    const int width = TITLE_WIDTH;
     int middle = std::round((float)height / 2);
     for (int h = middle - 2; h >= -1; h--) {
         setCursor(rowOffset + middle - 2 - h, colOffset);
@@ -71,7 +81,7 @@ void loadAnimation() {
     std::vector<void (*)()> funcs;
 
     funcs.push_back(&clearTitle);
-    funcs.push_back(&printTitle);
+    funcs.push_back(&printTitle); 
     loopFunctions(3, 500, 50, &printTitle, funcs);
 
     Sleep(2000);

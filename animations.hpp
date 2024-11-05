@@ -53,6 +53,9 @@ struct EnemyPos {
 };
 extern std::vector<EnemyPos*> enemyPos;
 
+void printTitle();
+void clearTitle();
+void closeTitle();
 void loadAnimation();
 void printScreen();
 char computePrintVal(Pos pos, Pos coord);

@@ -276,7 +276,7 @@
         for (const cell of selectedCells)
             frames[newFrame][cell.r][cell.c] = JSON.parse(JSON.stringify(frames[currFrame][cell.r][cell.c]));
         changeFrame(newFrame);
-        document.querySelector(`#frame${newFrame}`).checked = true;
+        document.querySelector(`#frame${currFrame + 1}`).checked = true;
     };
 
     // Plays and stops the animation
