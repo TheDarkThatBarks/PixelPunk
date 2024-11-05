@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits.h>
+#include <conio.h>
 
 #include "utilities.hpp"
 

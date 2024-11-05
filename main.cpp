@@ -33,6 +33,7 @@ int main() {
     _setmode(_fileno(stdout), _O_TEXT);*/
     std::srand(std::time(0));
     initMap(map);
+    //getch();
     loadAnimation();
     keyPress();
     //std::thread thr(animLoop);

@@ -3,7 +3,6 @@
 #include <iostream>
 #include <time.h>
 #include <stdio.h>
-#include <conio.h>
 #include <stdarg.h>
 #include <fcntl.h>
 #include <io.h>

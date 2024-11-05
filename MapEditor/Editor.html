@@ -131,7 +131,8 @@
         const type = frames[currFrame][r][c].type;
         document.querySelector("#type").value = type;
         if (type === "!") {
-            document.querySelector("#npc-id").value = npcIDs.find((e) => e.r === r && e.c === Math.floor(c / 2) * 2).id;
+            const npc = npcIDs.find((e) => e.r === r && e.c === Math.floor(c / 2) * 2);
+            document.querySelector("#npc-id").value = npc.id + "," + npc.r + "," + npc.c;
         } else {
             document.querySelector("#npc-id").value = "";
         }

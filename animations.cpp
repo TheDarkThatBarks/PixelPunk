@@ -312,13 +312,43 @@ void printConvoBox() {
 
 // Loads given dialogue file, expands window, and displays conversation
 void conversation(npcID npc) {
+    setColor(0);
     changeWindow(890, 700);
     Sleep(500);
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
-    const json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    for (int i = 0; i < dial.size(); i++) {
+        if (Pos(dial[i]["r"].template get<int>(), dial[i]["c"].template get<int>()) == npc.pos) {
+            dial = dial[i]["lines"];
+            break;
+        }
+    }
+    const SMALL_RECT scrollRect {
+        (short)(conversationCOffset + 2),
+        (short)(conversationROffset + 1),
+        (short)(conversationCOffset + 7 + maxCharsConvo),
+        (short)(conversationROffset + 13)
+    };
+    const SMALL_RECT clipRect {
+        (short)(conversationCOffset + 2),
+        (short)(conversationROffset),
+        (short)(conversationCOffset + 7 + maxCharsConvo),
+        (short)(conversationROffset + 13)
+    };
+    const CHAR_INFO charInfo {
+        ' ',
+        0
+    };
     for (int i = 0, r = 0; i < dial.size(); i++) {
+        if (2 * i + r > 12) {
+            //getch();
+            ScrollConsoleScreenBuffer(hConsole, &scrollRect, &clipRect, {conversationCOffset + 2, conversationROffset - 1}, &charInfo);
+            //getch();
+            r -= 2;
+        }
+
         std::string line = dial[i]["line"].template get<std::string>();
         setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 2);
         const Pos pos = dial[i]["player"].template get<bool>() ? *playerPos : npc.pos;
@@ -331,13 +361,38 @@ void conversation(npcID npc) {
         Sleep(500);
         
         std::vector<std::string> strs;
-        while (line.length() > maxCharsConvo) {
-            strs.push_back(line.substr(0, maxCharsConvo));
-            line.erase(0, maxCharsConvo);
+        std::stringstream stream(line);
+        std::string token;
+        std::string newLine = "";
+        while (getline(stream, token, ' ')) {
+            if (newLine.length() + token.length() > maxCharsConvo) {
+                if (token.length() > maxCharsConvo) {
+                    const int len = maxCharsConvo - newLine.length() - 1;
+                    newLine += " " + token.substr(0, len) + "-";
+                    token.erase(0, len);
+                    strs.push_back(newLine);
+                    while (token.length() > maxCharsConvo) {
+                        strs.push_back(token.substr(0, maxCharsConvo - 1) + "-");
+                        token.erase(0, maxCharsConvo - 1);
+                    }
+                } else {
+                    strs.push_back(newLine);
+                }
+                newLine = token;
+            } else {
+                newLine += (newLine.length() == 0 ? "" : " ") + token;
+            }
         }
-        strs.push_back(line);
+        strs.push_back(newLine);
+
         for (int j = 0; j < (int)strs.size(); j++) {
             r += (j ? 1 : 0);
+            if (2 * i + r > 12) {
+                //getch();
+                ScrollConsoleScreenBuffer(hConsole, &scrollRect, &clipRect, {(short)(conversationCOffset + 2), (short)conversationROffset}, &charInfo);
+                //getch();
+                r--;
+            }
             setCursor(conversationROffset + 2 * i + r + 1, conversationCOffset + 7);
             printConversationText(strs[j]);
         }
