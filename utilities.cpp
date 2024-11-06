@@ -4,8 +4,8 @@ HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 HWND console = GetConsoleWindow();
 RECT r;
 
-int windowWidth = ORIGINAL_WINDOW_WIDTH;
-int windowHeight = ORIGINAL_WINDOW_HEIGHT;
+int windowWidth = TITLE_WINDOW_WIDTH;
+int windowHeight = TITLE_WINDOW_HEIGHT;
 
 Pos screenPos(-1, -1);
 std::vector<std::vector<int>> mapCoord;

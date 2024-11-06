@@ -9,6 +9,7 @@
 #include <conio.h>
 
 #include "utilities.hpp"
+#include "dialogue.hpp"
 
 #define MENU_SIZE 3
 
@@ -25,8 +26,6 @@ extern const int conversationROffset;
 extern const int conversationCOffset;
 extern const int convoSize;
 extern const int maxCharsConvo;
-
-extern std::string map;
 
 extern int currFrame;
 extern std::vector<Pos> animChangeList;

@@ -1,6 +1,4 @@
 #include "animations.hpp"
-#include "json.hpp"
-using json = nlohmann::json;
 
 const int screenSize = 15;
 const int rOffset = 3;
@@ -27,6 +25,8 @@ std::vector<EnemyPos*> enemyPos;
 
 const int TITLE_HEIGHT = 6;
 const int TITLE_WIDTH = 60;
+const int titleROffset = 4;
+const int titleCOffset = 5;
 const std::string title[] = {
     "_______ __               __ _______             __    ",
     "\\____  \\__|__  ___ ____ |  |\\____  \\__ __  ___ |  | __",
@@ -45,9 +45,9 @@ const std::string title[] = {
 };*/
 
 void printTitle() {
-    int r = 5;
+    int r = titleROffset;
     for (std::string line : title) {
-        setCursor(r, 5);
+        setCursor(r, titleCOffset);
         printf("%s", line.c_str());
         r++;
     }
@@ -55,21 +55,19 @@ void printTitle() {
 
 void clearTitle() {
     for (int i = 0; i < TITLE_HEIGHT; i++) {
-        setCursor(i + 5, 5);
+        setCursor(i + titleROffset, titleCOffset);
         printf(std::string(TITLE_WIDTH, ' ').c_str());
     }
 }
 
 void closeTitle() {
-    const int rowOffset = 5;
-    const int colOffset = 5;
     const int height = TITLE_HEIGHT - 1;
     const int width = TITLE_WIDTH;
     int middle = std::round((float)height / 2);
     for (int h = middle - 2; h >= -1; h--) {
-        setCursor(rowOffset + middle - 2 - h, colOffset);
+        setCursor(titleROffset + middle - 2 - h, titleCOffset);
         printf(std::string(width, ' ').c_str());
-        setCursor(rowOffset + middle + h + 1, colOffset);
+        setCursor(titleROffset + middle + h + 1, titleCOffset);
         printf(std::string(width, ' ').c_str());
         if (h != -1)
             Sleep(50);
@@ -84,7 +82,14 @@ void loadAnimation() {
     funcs.push_back(&printTitle); 
     loopFunctions(3, 500, 50, &printTitle, funcs);
 
-    Sleep(2000);
+    Sleep(500);
+    setCursor(titleROffset + TITLE_HEIGHT + 1, titleCOffset + 17);
+    printf("PRESS ANY KEY TO START");
+
+    //Sleep(2000);
+    getch();
+    setCursor(titleROffset + TITLE_HEIGHT + 1, titleCOffset + 17);
+    printf("%s", std::string(22, ' ').c_str());
     closeTitle();
 
     Sleep(500);
@@ -108,8 +113,8 @@ void loadAnimation() {
     funcs.push_back(&printScreen);
     loopFunctions(3, 500, 50, &printScreen, funcs);
 
-    Sleep(500);
-    printMenu(1);
+    //Sleep(500);
+    //printMenu(1);
 
     Sleep(500);
     /*changeWindow(890, 700);
@@ -396,7 +401,7 @@ void printConvoBox() {
     reset();
 }*/
 
-// Loads given dialogue file, expands window, and displays conversation
+// Loads given NPC dialogue, expands window, and displays conversation
 void conversation(npcID npc) {
     setColor(0);
     changeWindow(CONVERSATION_WINDOW_WIDTH, windowHeight, 700);
@@ -404,7 +409,8 @@ void conversation(npcID npc) {
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
-    json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    //json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    json dial = dialogue[npc.id];
     for (int i = 0; i < dial.size(); i++) {
         if (Pos(dial[i]["r"].template get<int>(), dial[i]["c"].template get<int>()) == npc.pos) {
             dial = dial[i]["lines"];

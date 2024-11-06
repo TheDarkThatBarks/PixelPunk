@@ -2,15 +2,12 @@
 #include "main.hpp"
 //#include <locale>
 
-std::string map;
 std::vector<std::string> mapText;
 int textIndex = 0;
 
 // Creates and sizes window, loads map file, runs start animation, and starts game loop
 int main() {
     GetWindowRect(console, &r);
-    windowWidth = 539;
-    windowHeight = 294;
     MoveWindow(console, r.left, r.top, windowWidth, windowHeight, TRUE);
     DWORD style = GetWindowLong(console, GWL_STYLE);
     style &= ~WS_MAXIMIZEBOX;
@@ -24,8 +21,8 @@ int main() {
 
     //std::ifstream m("C:/Users/ellys/source/repos/SquareRPG/map1.txt");
     //std::ifstream m("map3.txt");
-    std::ifstream m("Maps/gameDemo.txt");
-	map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
+    //std::ifstream m("Maps/gameDemo.txt");
+	//map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
     /*std::fflush(stdout);
     _setmode(_fileno(stdout), 0x00020000); // _O_U16TEXT
     std::locale::global(std::locale(""));
@@ -509,10 +506,10 @@ void keyPress() {
                 } else if (kbCode == KB_SPACE) {
                     enemyAI();
                     updateScreen(-1);
-                } else if (kbCode == KB_TAB) {
+                }/* else if (kbCode == KB_TAB) {
                     kbMode = MENU;
                     updateSelection();
-                } else if (kbCode == KB_ENTER) {
+                }*/ else if (kbCode == KB_ENTER) {
                     bool foundNPC = false;
                     Pos npcPos = {-1, -1};
                     const int options[4][2] = {{1, 0}, {-1, 0}, {0, 2}, {0, -2}};
@@ -529,12 +526,12 @@ void keyPress() {
                             }
                         }
                     }
-                } else if (kbCode == 47 /* / */) {
+                }/* else if (kbCode == 47 /* / *//*) {
                     std::ifstream m("Maps/gameDemo.txt");
 	                map = std::string((std::istreambuf_iterator<char>(m)), std::istreambuf_iterator<char>());
                     initMap(map);
                     printScreen();
-                }
+                }*/
             } else if (kbMode == MENU) {
                 if (kbCode == 0 || kbCode == 224) {
                     switch (getch()) {

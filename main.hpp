@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "animations.hpp"
+#include "map.hpp"
 
 #define KB_UP 72
 #define KB_DOWN 80
