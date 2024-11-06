@@ -409,8 +409,8 @@ void conversation(npcID npc) {
     screenLoad(convoSize, screenSize, conversationROffset, conversationCOffset);
     Sleep(500);
 
-    //json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
-    json dial = dialogue[npc.id];
+    json dial = json::parse(std::ifstream("Dialogues/dialogue.json"))[npc.id];
+    //json dial = dialogue[npc.id];
     for (int i = 0; i < dial.size(); i++) {
         if (Pos(dial[i]["r"].template get<int>(), dial[i]["c"].template get<int>()) == npc.pos) {
             dial = dial[i]["lines"];
